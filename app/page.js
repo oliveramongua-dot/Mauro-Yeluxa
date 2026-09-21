@@ -10,7 +10,7 @@ function Countdown() {
     d: 0,
     h: 0,
     m: 0,
-    s: 0
+    s: 0,
   });
 
   useEffect(() => {
@@ -24,7 +24,7 @@ function Countdown() {
         d: Math.floor(diff / 86400000),
         h: Math.floor(diff / 3600000) % 24,
         m: Math.floor(diff / 60000) % 60,
-        s: Math.floor(diff / 1000) % 60
+        s: Math.floor(diff / 1000) % 60,
       });
     };
 
@@ -41,11 +41,11 @@ function Countdown() {
         DÍAS: left.d,
         HORAS: left.h,
         MINUTOS: left.m,
-        SEGUNDOS: left.s
-      }).map(([k, v]) => (
-        <div className="time" key={k}>
-          <strong>{String(v).padStart(2, '0')}</strong>
-          <span>{k}</span>
+        SEGUNDOS: left.s,
+      }).map(([label, value]) => (
+        <div className="time" key={label}>
+          <strong>{String(value).padStart(2, '0')}</strong>
+          <span>{label}</span>
         </div>
       ))}
     </div>
@@ -60,7 +60,9 @@ export default function Home() {
   const [opening, setOpening] = useState(false);
 
   useEffect(() => {
-    document.body.style.overflow = showIntro ? 'hidden' : '';
+    document.body.style.overflow = showIntro
+      ? 'hidden'
+      : '';
 
     return () => {
       document.body.style.overflow = '';
@@ -74,7 +76,7 @@ export default function Home() {
 
     setTimeout(() => {
       setShowIntro(false);
-    }, 1300);
+    }, 1100);
   };
 
   const submit = (e) => {
@@ -87,70 +89,39 @@ export default function Home() {
 
   return (
     <>
+      {/* =====================================================
+          PORTADA / SOBRE
+      ====================================================== */}
+
       {showIntro && (
         <div
           className={`invitation-intro ${
             opening ? 'invitation-opening' : ''
           }`}
         >
-          <div className="intro-glow" />
+          <div className="intro-cover">
 
-          <div className="envelope-stage">
+            <img
+              src="/sobre-mauro-yeluxa.png"
+              alt="Mauro & Yeluxa - Nuestra Boda"
+              className="intro-cover-image"
+            />
 
-            <div className="envelope">
-
-              <div className="envelope-back" />
-
-              <div className="envelope-letter">
-                <div className="letter-monogram">
-                  M&Y
-                </div>
-
-                <div className="letter-names">
-                  MAURO & YELUXA
-                </div>
-
-                <div className="letter-line" />
-
-                <div className="letter-title">
-                  NUESTRA BODA
-                </div>
-
-                <div className="letter-place">
-                  CARTAGENA DE INDIAS
-                </div>
-
-                <div className="letter-date">
-                  14 · MARZO · 2027
-                </div>
-              </div>
-
-              <div className="envelope-flap">
-                <div className="flap-inner" />
-              </div>
-
-              <div className="envelope-front" />
-
-              <button
-                className="wax-seal"
-                onClick={openInvitation}
-                aria-label="Abrir invitación"
-              >
-                <span>M&Y</span>
-              </button>
-
-            </div>
-
+            {/* Zona invisible sobre el sello */}
             <button
-              className="open-invitation"
+              type="button"
+              className="seal-hotspot"
               onClick={openInvitation}
-            >
-              Ábreme…
-            </button>
+              aria-label="Abrir invitación"
+            />
 
           </div>
         </div>
       )}
+
+      {/* =====================================================
+          INVITACIÓN
+      ====================================================== */}
 
       <main>
 
@@ -165,6 +136,10 @@ export default function Home() {
             <a href="#rsvp">RSVP</a>
           </div>
         </nav>
+
+        {/* =====================================================
+            HERO
+        ====================================================== */}
 
         <section className="hero">
 
@@ -192,10 +167,15 @@ export default function Home() {
 
         </section>
 
+        {/* =====================================================
+            SAVE THE DATE
+        ====================================================== */}
+
         <section
           id="fecha"
           className="section ivory centered"
         >
+
           <p className="eyebrow olive-text">
             SAVE THE DATE
           </p>
@@ -216,16 +196,21 @@ export default function Home() {
 
           <button
             className="outline-btn"
+            type="button"
             onClick={() =>
               alert(
-                'En la siguiente etapa conectaremos este botón con Google/Apple Calendar.'
+                'En la siguiente etapa conectaremos este botón con Google y Apple Calendar.'
               )
             }
           >
-            ＋ Añadir a mi calendario
+            ＋ AÑADIR A MI CALENDARIO
           </button>
 
         </section>
+
+        {/* =====================================================
+            CARTAGENA
+        ====================================================== */}
 
         <section
           id="cartagena"
@@ -233,7 +218,9 @@ export default function Home() {
         >
 
           <div className="image-card cartagena-image">
-            <span>Cartagena de Indias</span>
+            <span>
+              Cartagena de Indias
+            </span>
           </div>
 
           <div className="copy-card">
@@ -263,6 +250,10 @@ export default function Home() {
           </div>
 
         </section>
+
+        {/* =====================================================
+            NUESTRA HISTORIA
+        ====================================================== */}
 
         <section
           id="historia"
@@ -300,6 +291,10 @@ export default function Home() {
 
         </section>
 
+        {/* =====================================================
+            DRESS CODE
+        ====================================================== */}
+
         <section
           id="dress"
           className="section olive"
@@ -318,6 +313,7 @@ export default function Home() {
             <div className="dress-grid">
 
               <div>
+
                 <div className="dress-icon">
                   ♢
                 </div>
@@ -333,9 +329,11 @@ export default function Home() {
                     Preferiblemente traje oscuro.
                   </small>
                 </p>
+
               </div>
 
               <div>
+
                 <div className="dress-icon">
                   ♢
                 </div>
@@ -347,6 +345,7 @@ export default function Home() {
                 <p>
                   Vestido formal largo
                 </p>
+
               </div>
 
             </div>
@@ -358,6 +357,10 @@ export default function Home() {
           </div>
 
         </section>
+
+        {/* =====================================================
+            RSVP
+        ====================================================== */}
 
         <section
           id="rsvp"
@@ -382,7 +385,9 @@ export default function Home() {
 
             <p className="deadline">
               Confirma tu intención de asistir antes del{' '}
-              <strong>{RSVP_DEADLINE}</strong>.
+              <strong>
+                {RSVP_DEADLINE}
+              </strong>.
             </p>
 
             {!sent ? (
@@ -393,12 +398,16 @@ export default function Home() {
               >
 
                 <label>
-                  <span>Tu nombre</span>
+
+                  <span>
+                    Tu nombre
+                  </span>
 
                   <input
                     required
                     placeholder="Escribe tu nombre"
                   />
+
                 </label>
 
                 <div className="choices">
@@ -421,7 +430,7 @@ export default function Home() {
                     />
 
                     <span>
-                      Sí, quiero acompañarlos
+                      SÍ, QUIERO ACOMPAÑARLOS
                     </span>
 
                   </label>
@@ -444,7 +453,7 @@ export default function Home() {
                     />
 
                     <span>
-                      No podré acompañarlos
+                      NO PODRÉ ACOMPAÑARLOS
                     </span>
 
                   </label>
@@ -455,7 +464,7 @@ export default function Home() {
                   className="primary-btn"
                   type="submit"
                 >
-                  Enviar respuesta
+                  ENVIAR RESPUESTA
                 </button>
 
               </form>
@@ -464,7 +473,9 @@ export default function Home() {
 
               <div className="success">
 
-                <span>✓</span>
+                <span>
+                  ✓
+                </span>
 
                 <h3>
                   Gracias por respondernos.
@@ -473,8 +484,6 @@ export default function Home() {
                 <p>
                   Tu respuesta quedó registrada
                   en esta primera versión.
-                  En la siguiente etapa conectaremos
-                  este formulario con la base de invitados.
                 </p>
 
               </div>
@@ -485,35 +494,41 @@ export default function Home() {
 
         </section>
 
+        {/* =====================================================
+            FOOTER
+        ====================================================== */}
+
         <footer className="footer">
-          <span>M&Y</span>
+
+          <span>
+            M&Y
+          </span>
 
           <p>
-            Nos vemos en Cartagena · Marzo 2027
+            NOS VEMOS EN CARTAGENA · MARZO 2027
           </p>
+
         </footer>
 
       </main>
+
+      {/* =====================================================
+          ESTILOS DE LA APERTURA
+      ====================================================== */}
 
       <style jsx>{`
 
         .invitation-intro {
           position: fixed;
           inset: 0;
-          z-index: 9999;
-          display: flex;
-          align-items: center;
-          justify-content: center;
+          z-index: 99999;
+          background: #f5f1e8;
           overflow: hidden;
-          background:
-            radial-gradient(
-              circle at center,
-              #faf7ef 0%,
-              #f1eadc 100%
-            );
+          opacity: 1;
+          visibility: visible;
           transition:
-            opacity 0.8s ease,
-            visibility 0.8s ease;
+            opacity 0.9s ease,
+            visibility 0.9s ease;
         }
 
         .invitation-opening {
@@ -521,251 +536,115 @@ export default function Home() {
           visibility: hidden;
         }
 
-        .intro-glow {
-          position: absolute;
-          width: 70vw;
-          height: 70vw;
-          max-width: 600px;
-          max-height: 600px;
-          border-radius: 50%;
-          background: rgba(255,255,255,0.35);
-          filter: blur(50px);
-        }
-
-        .envelope-stage {
-          position: relative;
-          width: min(88vw, 430px);
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 28px;
-        }
-
-        .envelope {
+        .intro-cover {
           position: relative;
           width: 100%;
-          aspect-ratio: 1.45 / 1;
-          perspective: 1000px;
-          filter:
-            drop-shadow(
-              0 25px 35px rgba(72,54,39,0.18)
-            );
-        }
-
-        .envelope-back,
-        .envelope-front {
-          position: absolute;
-          inset: 0;
-          border-radius: 3px;
-        }
-
-        .envelope-back {
-          background:
-            linear-gradient(
-              145deg,
-              #fffdf7,
-              #e9dfce
-            );
-          border: 1px solid rgba(110,90,60,0.14);
-        }
-
-        .envelope-letter {
-          position: absolute;
-          z-index: 2;
-          left: 8%;
-          right: 8%;
-          top: 8%;
-          height: 84%;
-          background: #fcfaf3;
-          border: 1px solid rgba(100,80,50,0.1);
+          height: 100%;
+          overflow: hidden;
           display: flex;
-          flex-direction: column;
           align-items: center;
           justify-content: center;
-          color: #4c5140;
-          transition:
-            transform 1.1s cubic-bezier(.2,.8,.2,1);
         }
 
-        .letter-monogram {
-          font-family: var(--font-cormorant), serif;
-          font-size: 52px;
-          font-style: italic;
-          margin-bottom: 8px;
-        }
-
-        .letter-names {
-          font-family: var(--font-dm-sans), sans-serif;
-          font-size: 8px;
-          letter-spacing: 0.35em;
-        }
-
-        .letter-line {
-          width: 42px;
-          height: 1px;
-          background: #b7ab94;
-          margin: 14px 0;
-        }
-
-        .letter-title {
-          font-family: var(--font-cormorant), serif;
-          font-size: 22px;
-          letter-spacing: 0.12em;
-        }
-
-        .letter-place,
-        .letter-date {
-          font-family: var(--font-dm-sans), sans-serif;
-          font-size: 7px;
-          letter-spacing: 0.2em;
-          margin-top: 8px;
-        }
-
-        .envelope-flap {
-          position: absolute;
-          z-index: 5;
-          inset: 0;
-          height: 62%;
-          transform-origin: top center;
-          transform-style: preserve-3d;
-          transition:
-            transform 1s cubic-bezier(.2,.8,.2,1);
-        }
-
-        .flap-inner {
-          position: absolute;
-          inset: 0;
-          clip-path: polygon(
-            0 0,
-            100% 0,
-            50% 100%
-          );
-          background:
-            linear-gradient(
-              145deg,
-              #fffdf8,
-              #e6dccb
-            );
-          border-top: 1px solid rgba(110,90,60,0.1);
-        }
-
-        .envelope-front {
-          z-index: 6;
-          background: transparent;
-          pointer-events: none;
-        }
-
-        .wax-seal {
-          position: absolute;
-          z-index: 10;
-          left: 50%;
-          top: 57%;
-          transform: translate(-50%, -50%);
-          width: 76px;
-          height: 76px;
-          border-radius: 50%;
-          border: 0;
-          background:
-            radial-gradient(
-              circle at 35% 30%,
-              #8a4143,
-              #572932 58%,
-              #421e26
-            );
-          color: #e7d6b5;
-          box-shadow:
-            0 8px 14px rgba(50,20,20,0.25),
-            inset 0 2px 4px rgba(255,255,255,0.15);
-          cursor: pointer;
-          transition:
-            transform 0.35s ease,
-            box-shadow 0.35s ease;
-        }
-
-        .wax-seal span {
-          font-family: var(--font-cormorant), serif;
-          font-size: 25px;
-          font-style: italic;
-        }
-
-        .wax-seal:hover {
-          transform: translate(-50%, -50%) scale(1.06);
-        }
-
-        .open-invitation {
-          border: 0;
-          background: transparent;
-          color: #4b5140;
-          font-family: var(--font-cormorant), serif;
-          font-size: 27px;
-          font-style: italic;
-          cursor: pointer;
-          padding: 6px 15px;
-          letter-spacing: 0.03em;
-        }
-
-        .open-invitation::after {
-          content: '';
+        .intro-cover-image {
+          width: 100%;
+          height: 100%;
           display: block;
-          width: 35px;
-          height: 1px;
-          margin: 7px auto 0;
-          background: #9b8c72;
-          transition: width 0.3s ease;
+          object-fit: cover;
+          object-position: center center;
+          transform: scale(1);
+          transition:
+            transform 1.1s
+              cubic-bezier(.2,.75,.2,1),
+            filter 1.1s ease;
         }
 
-        .open-invitation:hover::after {
-          width: 55px;
+        /*
+         * Zona invisible que coincide con el
+         * sello de lacre de la imagen.
+         */
+
+        .seal-hotspot {
+          position: absolute;
+          left: 50%;
+          top: 54%;
+          width: 105px;
+          height: 105px;
+          transform: translate(-50%, -50%);
+          border: 0;
+          border-radius: 50%;
+          background: transparent;
+          cursor: pointer;
+          padding: 0;
+          -webkit-tap-highlight-color: transparent;
+          z-index: 10;
         }
 
-        .invitation-opening .envelope-flap {
-          transform: rotateX(180deg);
+        .seal-hotspot::after {
+          content: '';
+          position: absolute;
+          inset: 18px;
+          border-radius: 50%;
+          box-shadow:
+            0 0 0 0
+            rgba(87, 41, 50, 0.28);
+          animation:
+            sealPulse 2.4s infinite;
         }
 
-        .invitation-opening .envelope-letter {
-          transform: translateY(-38%) scale(1.04);
+        .invitation-opening
+        .intro-cover-image {
+          transform:
+            scale(1.12);
+          filter:
+            brightness(1.08)
+            blur(1px);
         }
 
-        .invitation-opening .wax-seal {
+        .invitation-opening
+        .seal-hotspot {
+          opacity: 0;
           transform:
             translate(-50%, -50%)
-            scale(0.7);
-          opacity: 0;
+            scale(0.75);
           transition:
-            transform 0.45s ease,
-            opacity 0.45s ease;
+            opacity 0.3s ease,
+            transform 0.3s ease;
+        }
+
+        @keyframes sealPulse {
+
+          0%,
+          100% {
+            box-shadow:
+              0 0 0 0
+              rgba(87, 41, 50, 0.25);
+          }
+
+          50% {
+            box-shadow:
+              0 0 0 13px
+              rgba(87, 41, 50, 0);
+          }
+
         }
 
         @media (max-width: 760px) {
 
-          .envelope-stage {
-            width: 88vw;
+          .intro-cover-image {
+            object-position: center center;
           }
 
-          .envelope {
-            aspect-ratio: 1.32 / 1;
-          }
-
-          .letter-monogram {
-            font-size: 43px;
-          }
-
-          .letter-title {
-            font-size: 19px;
-          }
-
-          .wax-seal {
-            width: 68px;
-            height: 68px;
-          }
-
-          .open-invitation {
-            font-size: 25px;
+          .seal-hotspot {
+            width: 96px;
+            height: 96px;
+            top: 54%;
           }
 
         }
 
       `}</style>
+
     </>
   );
 }
