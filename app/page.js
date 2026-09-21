@@ -15,7 +15,10 @@ function Countdown() {
 
   useEffect(() => {
     const tick = () => {
-      const diff = Math.max(0, WEDDING_DATE.getTime() - Date.now());
+      const diff = Math.max(
+        0,
+        WEDDING_DATE.getTime() - Date.now()
+      );
 
       setLeft({
         d: Math.floor(diff / 86400000),
@@ -52,6 +55,7 @@ function Countdown() {
 export default function Home() {
   const [answer, setAnswer] = useState('');
   const [sent, setSent] = useState(false);
+
   const [showIntro, setShowIntro] = useState(true);
   const [opening, setOpening] = useState(false);
 
@@ -63,13 +67,11 @@ export default function Home() {
     setTimeout(() => {
       setShowIntro(false);
 
-      setTimeout(() => {
-        window.scrollTo({
-          top: 0,
-          behavior: 'instant',
-        });
-      }, 50);
-    }, 1100);
+      window.scrollTo({
+        top: 0,
+        behavior: 'instant',
+      });
+    }, 1450);
   };
 
   const submit = (e) => {
@@ -84,7 +86,7 @@ export default function Home() {
     return (
       <>
         <main
-          className={`invitation-opening ${
+          className={`envelope-screen ${
             opening ? 'is-opening' : ''
           }`}
           onClick={openInvitation}
@@ -96,187 +98,365 @@ export default function Home() {
             }
           }}
         >
-          <div className="opening-photo">
+          {/* FONDO */}
+          <div className="envelope-background" />
+
+          {/* INVITACIÓN QUE SALE DEL SOBRE */}
+          <div className="paper-reveal">
+            <div className="paper-inner">
+              <div className="paper-monogram">M&Y</div>
+
+              <div className="paper-line" />
+
+              <p>MAURO & YELUXA</p>
+
+              <span>NUESTRA BODA</span>
+
+              <small>
+                CARTAGENA DE INDIAS
+                <br />
+                14 · MARZO · 2027
+              </small>
+            </div>
+          </div>
+
+          {/* SOBRE */}
+          <div className="envelope-photo">
             <img
               src="/4F54E911-D943-4FBF-9EC9-FECC9EB0FF70.png"
-              alt="Sobre de invitación de Mauro y Yeluxa"
+              alt="Invitación de boda de Mauro y Yeluxa"
             />
           </div>
 
-          <div className="opening-caption">
-            <span className="opening-title">Ábreme...</span>
-
-            <div className="opening-divider">
-              <span></span>
-              <b>♥</b>
-              <span></span>
+          {/* INDICADOR MUY SUTIL */}
+          {!opening && (
+            <div className="touch-hint">
+              <span>TOCA PARA ABRIR</span>
+              <i>↓</i>
             </div>
+          )}
 
-            <small>Toca para abrir</small>
-          </div>
-
-          <div className="opening-hint">
-            <span className="heart">♥</span>
-          </div>
+          {/* DESTELLO DURANTE LA APERTURA */}
+          <div className="opening-light" />
         </main>
 
         <style>{`
-          .invitation-opening {
+          * {
+            box-sizing: border-box;
+          }
+
+          html,
+          body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: #f5f1e8;
+          }
+
+          .envelope-screen {
             position: fixed;
             inset: 0;
-            z-index: 9999;
+            width: 100vw;
+            height: 100dvh;
+            min-height: 100vh;
+            z-index: 99999;
             overflow: hidden;
+            background: #f5f1e8;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+          }
+
+          /*
+            FONDO CREMA
+          */
+
+          .envelope-background {
+            position: absolute;
+            inset: 0;
             background:
               radial-gradient(
-                circle at center,
-                rgba(255,255,255,.35),
-                rgba(245,241,232,.96)
+                circle at 50% 45%,
+                #fffdf8 0%,
+                #f8f4eb 45%,
+                #eee7da 100%
               );
+          }
+
+          /*
+            TARJETA QUE SALE DE DETRÁS
+          */
+
+          .paper-reveal {
+            position: absolute;
+            z-index: 1;
+            left: 50%;
+            bottom: -12%;
+            width: min(78vw, 430px);
+            height: min(82vh, 690px);
+            transform:
+              translateX(-50%)
+              translateY(105%);
+            background:
+              linear-gradient(
+                135deg,
+                #fffdf8,
+                #f4eee2
+              );
+            box-shadow:
+              0 25px 70px rgba(48, 42, 31, .18),
+              0 4px 15px rgba(48, 42, 31, .08);
+            transition:
+              transform 1.15s cubic-bezier(.16,.72,.25,1);
+          }
+
+          .paper-inner {
+            position: absolute;
+            inset: 18px;
+            border: 1px solid rgba(87,41,50,.18);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 24px 18px 70px;
-            cursor: pointer;
-            color: #3f4037;
+            text-align: center;
+            color: #3e4734;
           }
 
-          .opening-photo {
-            width: min(92vw, 520px);
-            aspect-ratio: 9 / 16;
+          .paper-monogram {
+            font-family:
+              var(--font-cormorant),
+              Georgia,
+              serif;
+            font-size: 72px;
+            font-style: italic;
+            line-height: 1;
+            color: #572932;
+          }
+
+          .paper-line {
+            width: 55px;
+            height: 1px;
+            background: #a49683;
+            margin: 20px 0;
+          }
+
+          .paper-inner p {
+            margin: 0;
+            font-family:
+              var(--font-dm-sans),
+              sans-serif;
+            font-size: 9px;
+            letter-spacing: .3em;
+          }
+
+          .paper-inner span {
+            margin-top: 12px;
+            font-family:
+              var(--font-cormorant),
+              Georgia,
+              serif;
+            font-size: 28px;
+            letter-spacing: .04em;
+          }
+
+          .paper-inner small {
+            margin-top: 30px;
+            font-family:
+              var(--font-dm-sans),
+              sans-serif;
+            font-size: 8px;
+            line-height: 2;
+            letter-spacing: .2em;
+          }
+
+          /*
+            SOBRE / IMAGEN
+          */
+
+          .envelope-photo {
+            position: absolute;
+            z-index: 3;
+            inset: 0;
+            width: 100%;
+            height: 100%;
             display: flex;
             align-items: center;
             justify-content: center;
-            transform-origin: center;
+            overflow: hidden;
+
+            transform-origin: center bottom;
+
             transition:
-              transform 1.05s cubic-bezier(.22,.61,.36,1),
+              transform 1.25s cubic-bezier(.18,.72,.22,1),
               opacity .8s ease,
-              filter .8s ease;
+              filter 1s ease;
           }
 
-          .opening-photo img {
+          .envelope-photo img {
             display: block;
             width: 100%;
             height: 100%;
-            object-fit: contain;
-            object-position: center;
-            filter: drop-shadow(
-              0 20px 30px rgba(62, 55, 43, .16)
-            );
+            object-fit: cover;
+            object-position: center center;
+            user-select: none;
+            -webkit-user-drag: none;
           }
 
-          .opening-caption {
+          /*
+            INDICACIÓN
+          */
+
+          .touch-hint {
             position: absolute;
-            bottom: 7.5vh;
-            left: 0;
-            right: 0;
-            text-align: center;
-            pointer-events: none;
-            transition:
-              opacity .45s ease,
-              transform .45s ease;
-          }
-
-          .opening-title {
-            display: block;
-            font-family: var(--font-cormorant), Georgia, serif;
-            font-style: italic;
-            font-size: clamp(34px, 9vw, 52px);
-            line-height: 1;
-            color: #3e4734;
-            letter-spacing: .01em;
-          }
-
-          .opening-divider {
+            z-index: 10;
+            left: 50%;
+            bottom: 4.5vh;
+            transform: translateX(-50%);
             display: flex;
+            flex-direction: column;
             align-items: center;
-            justify-content: center;
-            gap: 13px;
-            margin: 13px auto 0;
+            gap: 9px;
+            color: rgba(62,71,52,.85);
+            pointer-events: none;
+            animation: hintFloat 2.2s ease-in-out infinite;
           }
 
-          .opening-divider span {
-            display: block;
-            width: 42px;
-            height: 1px;
-            background: #9a8a76;
+          .touch-hint span {
+            font-family:
+              var(--font-dm-sans),
+              sans-serif;
+            font-size: 8px;
+            letter-spacing: .3em;
+            white-space: nowrap;
           }
 
-          .opening-divider b {
-            color: #572932;
-            font-size: 13px;
-            font-weight: 400;
+          .touch-hint i {
+            font-family:
+              var(--font-cormorant),
+              Georgia,
+              serif;
+            font-size: 17px;
+            font-style: normal;
           }
 
-          .opening-caption small {
-            display: block;
-            margin-top: 14px;
-            font-family: var(--font-dm-sans), sans-serif;
-            font-size: 9px;
-            text-transform: uppercase;
-            letter-spacing: .24em;
-            color: #777264;
+          @keyframes hintFloat {
+            0%, 100% {
+              transform: translateX(-50%) translateY(0);
+              opacity: .72;
+            }
+
+            50% {
+              transform: translateX(-50%) translateY(5px);
+              opacity: 1;
+            }
           }
 
-          .opening-hint {
+          /*
+            LUZ
+          */
+
+          .opening-light {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 90px;
-            height: 90px;
-            transform: translate(-50%, -50%);
-            border-radius: 50%;
-            border: 1px solid rgba(87,41,50,.12);
+            z-index: 20;
+            inset: -30%;
+            background:
+              radial-gradient(
+                circle at center,
+                rgba(255,255,255,.95) 0%,
+                rgba(255,255,255,.4) 18%,
+                rgba(255,255,255,0) 55%
+              );
             opacity: 0;
             pointer-events: none;
           }
 
-          .heart {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: #572932;
-            font-size: 17px;
-          }
+          /*
+            ANIMACIÓN DE APERTURA
+          */
 
-          .invitation-opening.is-opening .opening-photo {
+          .envelope-screen.is-opening
+            .envelope-photo {
             transform:
-              scale(1.12)
-              translateY(-3%);
+              translateY(-105%)
+              scale(1.08)
+              rotateX(7deg);
             opacity: 0;
-            filter: blur(4px);
+            filter: brightness(1.08);
           }
 
-          .invitation-opening.is-opening .opening-caption {
-            opacity: 0;
-            transform: translateY(15px);
+          .envelope-screen.is-opening
+            .paper-reveal {
+            transform:
+              translateX(-50%)
+              translateY(-2%);
           }
+
+          .envelope-screen.is-opening
+            .opening-light {
+            animation: openingLight 1.4s ease forwards;
+          }
+
+          .envelope-screen.is-opening
+            .touch-hint {
+            opacity: 0;
+            transition: opacity .25s ease;
+          }
+
+          @keyframes openingLight {
+            0% {
+              opacity: 0;
+            }
+
+            55% {
+              opacity: .75;
+            }
+
+            100% {
+              opacity: 0;
+            }
+          }
+
+          /*
+            PANTALLAS MUY ALTAS
+          */
+
+          @media (min-height: 850px) and (max-width: 600px) {
+            .touch-hint {
+              bottom: 5.5vh;
+            }
+          }
+
+          /*
+            IPHONE PEQUEÑO
+          */
+
+          @media (max-width: 380px) {
+            .paper-reveal {
+              width: 84vw;
+            }
+
+            .paper-monogram {
+              font-size: 62px;
+            }
+          }
+
+          /*
+            EVITAR SCROLL / MOVIMIENTO
+          */
 
           @media (max-width: 600px) {
-            .invitation-opening {
-              padding-top: 15px;
-              padding-bottom: 65px;
+            .envelope-screen {
+              touch-action: manipulation;
+            }
+          }
+
+          @media (prefers-reduced-motion: reduce) {
+            .envelope-photo,
+            .paper-reveal {
+              transition-duration: .3s;
             }
 
-            .opening-photo {
-              width: 100vw;
-              height: 72vh;
-              aspect-ratio: auto;
-            }
-
-            .opening-photo img {
-              width: 100%;
-              height: 100%;
-              object-fit: contain;
-            }
-
-            .opening-caption {
-              bottom: 6.5vh;
-            }
-
-            .opening-title {
-              font-size: 43px;
+            .touch-hint {
+              animation: none;
             }
           }
         `}</style>
@@ -299,11 +479,15 @@ export default function Home() {
           </div>
         </nav>
 
+        {/* HERO */}
+
         <section className="hero">
-          <div className="hero-overlay"></div>
+          <div className="hero-overlay" />
 
           <div className="hero-content">
-            <p className="eyebrow">NUESTRA BODA</p>
+            <p className="eyebrow">
+              NUESTRA BODA
+            </p>
 
             <h1>
               MAURO <em>&</em> YELUXA
@@ -319,6 +503,8 @@ export default function Home() {
           </div>
         </section>
 
+        {/* FECHA */}
+
         <section
           id="fecha"
           className="section ivory centered"
@@ -327,7 +513,9 @@ export default function Home() {
             SAVE THE DATE
           </p>
 
-          <h2>Reserva esta fecha</h2>
+          <h2>
+            Reserva esta fecha
+          </h2>
 
           <p className="date">
             14 · MARZO · 2027
@@ -351,12 +539,16 @@ export default function Home() {
           </button>
         </section>
 
+        {/* CARTAGENA */}
+
         <section
           id="cartagena"
           className="section split"
         >
           <div className="image-card cartagena-image">
-            <span>Cartagena de Indias</span>
+            <span>
+              Cartagena de Indias
+            </span>
           </div>
 
           <div className="copy-card">
@@ -371,10 +563,12 @@ export default function Home() {
             </h2>
 
             <p>
-              Queremos compartir este momento contigo en el
-              corazón de Cartagena de Indias, entre murallas,
-              historia, arquitectura y el encanto de una ciudad
-              que significa tanto para nosotros.
+              Queremos compartir este momento
+              contigo en el corazón de Cartagena
+              de Indias, entre murallas, historia,
+              arquitectura y el encanto de una
+              ciudad que significa tanto para
+              nosotros.
             </p>
 
             <p className="script">
@@ -382,6 +576,8 @@ export default function Home() {
             </p>
           </div>
         </section>
+
+        {/* HISTORIA */}
 
         <section
           id="historia"
@@ -397,21 +593,25 @@ export default function Home() {
             </h2>
 
             <p>
-              Después de tantos momentos compartidos,
-              viajes, sueños y aventuras, llegó el momento
-              de comenzar un nuevo capítulo juntos.
+              Después de tantos momentos
+              compartidos, viajes, sueños y
+              aventuras, llegó el momento de
+              comenzar un nuevo capítulo juntos.
             </p>
 
             <div className="photo-grid">
-              <div className="photo-placeholder photo-one"></div>
-              <div className="photo-placeholder photo-two"></div>
+              <div className="photo-placeholder photo-one" />
+              <div className="photo-placeholder photo-two" />
             </div>
 
             <p className="quote">
-              “La vida es más linda cuando la compartimos.”
+              “La vida es más linda cuando
+              la compartimos.”
             </p>
           </div>
         </section>
+
+        {/* DRESS CODE */}
 
         <section
           id="dress"
@@ -422,12 +622,20 @@ export default function Home() {
               DRESS CODE
             </p>
 
-            <h2>Formal</h2>
+            <h2>
+              Formal
+            </h2>
 
             <div className="dress-grid">
               <div>
-                <div className="dress-icon">♢</div>
-                <h3>Hombres</h3>
+                <div className="dress-icon">
+                  ♢
+                </div>
+
+                <h3>
+                  Hombres
+                </h3>
+
                 <p>
                   Traje formal
                   <br />
@@ -436,8 +644,14 @@ export default function Home() {
               </div>
 
               <div>
-                <div className="dress-icon">♢</div>
-                <h3>Mujeres</h3>
+                <div className="dress-icon">
+                  ♢
+                </div>
+
+                <h3>
+                  Mujeres
+                </h3>
+
                 <p>
                   Vestido formal largo
                 </p>
@@ -451,6 +665,8 @@ export default function Home() {
             </div>
           </div>
         </section>
+
+        {/* RSVP */}
 
         <section
           id="rsvp"
@@ -466,13 +682,18 @@ export default function Home() {
             </h2>
 
             <p>
-              Estamos preparando este día con mucho cariño
-              y queremos saber si podremos celebrarlo contigo.
+              Estamos preparando este día con
+              mucho cariño y queremos saber si
+              podremos celebrarlo contigo.
             </p>
 
             <p className="rsvp-deadline">
-              Confirma tu intención de asistir antes del{' '}
-              <strong>{RSVP_DEADLINE}</strong>.
+              Confirma tu intención de asistir
+              antes del{' '}
+              <strong>
+                {RSVP_DEADLINE}
+              </strong>
+              .
             </p>
 
             {!sent ? (
@@ -481,7 +702,9 @@ export default function Home() {
                 onSubmit={submit}
               >
                 <label>
-                  <span>Tu nombre</span>
+                  <span>
+                    Tu nombre
+                  </span>
 
                   <input
                     required
@@ -501,9 +724,13 @@ export default function Home() {
                       type="radio"
                       name="rsvp"
                       value="yes"
-                      checked={answer === 'yes'}
+                      checked={
+                        answer === 'yes'
+                      }
                       onChange={(e) =>
-                        setAnswer(e.target.value)
+                        setAnswer(
+                          e.target.value
+                        )
                       }
                     />
 
@@ -523,9 +750,13 @@ export default function Home() {
                       type="radio"
                       name="rsvp"
                       value="no"
-                      checked={answer === 'no'}
+                      checked={
+                        answer === 'no'
+                      }
                       onChange={(e) =>
-                        setAnswer(e.target.value)
+                        setAnswer(
+                          e.target.value
+                        )
                       }
                     />
 
@@ -551,16 +782,20 @@ export default function Home() {
                 </h3>
 
                 <p>
-                  Guardaremos tu respuesta con mucho
-                  cariño.
+                  Guardaremos tu respuesta
+                  con mucho cariño.
                 </p>
               </div>
             )}
           </div>
         </section>
 
+        {/* FOOTER */}
+
         <footer className="footer">
-          <span>M&Y</span>
+          <span>
+            M&Y
+          </span>
 
           <p>
             NOS VEMOS EN CARTAGENA · MARZO 2027
@@ -569,22 +804,22 @@ export default function Home() {
       </main>
 
       <style>{`
-        :global(*) {
+        * {
           box-sizing: border-box;
         }
 
-        :global(html) {
+        html {
           scroll-behavior: smooth;
         }
 
-        :global(body) {
+        body {
           margin: 0;
           background: #f5f1e8;
           color: #27261f;
         }
 
-        :global(button),
-        :global(input) {
+        button,
+        input {
           font: inherit;
         }
 
@@ -599,8 +834,6 @@ export default function Home() {
           justify-content: space-between;
           padding: 22px 30px;
           color: white;
-          mix-blend-mode: normal;
-          pointer-events: none;
         }
 
         .monogram {
@@ -610,13 +843,11 @@ export default function Home() {
             serif;
           font-size: 25px;
           font-style: italic;
-          pointer-events: auto;
         }
 
         .nav-links {
           display: flex;
           gap: 24px;
-          pointer-events: auto;
         }
 
         .nav-links a {
@@ -700,12 +931,10 @@ export default function Home() {
           font-size: clamp(52px, 14vw, 110px);
           font-weight: 400;
           line-height: .9;
-          letter-spacing: .02em;
         }
 
         .hero h1 em {
           font-style: italic;
-          font-weight: 400;
         }
 
         .location {
@@ -845,7 +1074,7 @@ export default function Home() {
 
         .primary-btn {
           background: #572932;
-          color: #fff;
+          color: white;
         }
 
         .split {
@@ -875,8 +1104,6 @@ export default function Home() {
             Georgia,
             serif;
           font-size: 34px;
-          position: relative;
-          z-index: 2;
         }
 
         .copy-card {
