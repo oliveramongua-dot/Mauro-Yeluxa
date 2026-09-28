@@ -18,6 +18,21 @@ const CARTAGENA_PHOTOS = [
 
 const PINTEREST_URL = "https://www.pinterest.com/";
 
+function PaperTexture({ tone = "white" }) {
+  return (
+    <div
+      className={`paper-texture ${tone}`}
+      aria-hidden="true"
+    >
+      <span className="watercolor watercolor-one" />
+      <span className="watercolor watercolor-two" />
+      <span className="watercolor watercolor-three" />
+      <span className="watercolor watercolor-four" />
+      <span className="paper-grain" />
+    </div>
+  );
+}
+
 function Photo({ src, alt, className = "" }) {
   const [failed, setFailed] = useState(false);
 
@@ -40,18 +55,6 @@ function Photo({ src, alt, className = "" }) {
   );
 }
 
-function PaperTexture({ tone = "paper" }) {
-  return (
-    <div className={`paper-texture ${tone}`} aria-hidden="true">
-      <span className="brush brush-a" />
-      <span className="brush brush-b" />
-      <span className="brush brush-c" />
-      <span className="splatter splatter-a" />
-      <span className="splatter splatter-b" />
-    </div>
-  );
-}
-
 function Countdown() {
   const [now, setNow] = useState(Date.now());
 
@@ -69,75 +72,133 @@ function Countdown() {
       WEDDING_DATE.getTime() - now
     );
 
-    const total = Math.floor(difference / 1000);
-
     return {
-      days: Math.floor(total / 86400),
-      hours: Math.floor((total % 86400) / 3600),
-      minutes: Math.floor((total % 3600) / 60),
-      seconds: total % 60,
+      days: Math.floor(difference / 86400000),
+      hours: Math.floor(difference / 3600000) % 24,
+      minutes: Math.floor(difference / 60000) % 60,
+      seconds: Math.floor(difference / 1000) % 60,
     };
   }, [now]);
 
-  const items = [
-    ["days", "DÍAS"],
-    ["hours", "HORAS"],
-    ["minutes", "MINUTOS"],
-    ["seconds", "SEGUNDOS"],
-  ];
-
   return (
     <div className="countdown">
-      {items.map(([key, label]) => (
-        <div className="count-item" key={key}>
-          <strong>
-            {String(values[key]).padStart(2, "0")}
-          </strong>
-          <span>{label}</span>
-        </div>
-      ))}
+      <div>
+        <strong>{String(values.days).padStart(3, "0")}</strong>
+        <span>DÍAS</span>
+      </div>
+
+      <div>
+        <strong>{String(values.hours).padStart(2, "0")}</strong>
+        <span>HORAS</span>
+      </div>
+
+      <div>
+        <strong>{String(values.minutes).padStart(2, "0")}</strong>
+        <span>MINUTOS</span>
+      </div>
+
+      <div>
+        <strong>{String(values.seconds).padStart(2, "0")}</strong>
+        <span>SEGUNDOS</span>
+      </div>
+    </div>
+  );
+}
+
+function WatercolorPhoto({ src, alt, className = "" }) {
+  const [failed, setFailed] = useState(false);
+
+  if (failed) {
+    return (
+      <div className={`watercolor-photo-fallback ${className}`} />
+    );
+  }
+
+  return (
+    <div className={`watercolor-photo ${className}`}>
+      <span className="photo-wash wash-one" />
+      <span className="photo-wash wash-two" />
+      <span className="photo-wash wash-three" />
+
+      <img
+        src={src}
+        alt={alt}
+        onError={() => setFailed(true)}
+      />
+
+      <span className="brush-edge brush-top" />
+      <span className="brush-edge brush-left" />
+      <span className="brush-edge brush-right" />
+      <span className="brush-edge brush-bottom" />
+    </div>
+  );
+}
+
+function DressIllustration({ type }) {
+  return (
+    <div
+      className={`dress-illustration ${
+        type === "man" ? "dress-man" : "dress-woman"
+      }`}
+    >
+      <div className="figure-head" />
+      <div className="figure-body" />
+
+      {type === "man" ? (
+        <>
+          <div className="figure-jacket" />
+          <div className="figure-shirt" />
+          <div className="figure-tie" />
+          <div className="figure-leg left" />
+          <div className="figure-leg right" />
+        </>
+      ) : (
+        <>
+          <div className="figure-dress" />
+          <div className="figure-arm left" />
+          <div className="figure-arm right" />
+        </>
+      )}
     </div>
   );
 }
 
 export default function Home() {
-  const [started, setStarted] = useState(false);
-  const [name, setName] = useState("");
-  const [rsvpState, setRsvpState] = useState("idle");
+  const [slide, setSlide] = useState(0);
+
+  const [guestName, setGuestName] = useState("");
   const [confirmedSeats, setConfirmedSeats] = useState(null);
+  const [rsvpLoading, setRsvpLoading] = useState(false);
   const [rsvpError, setRsvpError] = useState("");
 
-  const calendarUrl =
-    "https://calendar.google.com/calendar/render?action=TEMPLATE" +
-    "&text=Mauro%20%26%20Yeluxa%20-%20Nuestra%20Boda" +
-    "&dates=20270306T160000/20270307T000000" +
-    "&details=Nuestra%20boda%20en%20Cartagena%20de%20Indias." +
-    "&location=Cartagena%20de%20Indias%2C%20Colombia";
+  const scrollToSection = (id) => {
+    document
+      .getElementById(id)
+      ?.scrollIntoView({ behavior: "smooth" });
+  };
 
-  function enterInvitation() {
-    setStarted(true);
+  const openInvitation = () => {
+    setSlide(1);
 
     setTimeout(() => {
-      document
-        .getElementById("save-the-date")
-        ?.scrollIntoView({
-          behavior: "smooth",
-          block: "start",
-        });
-    }, 120);
-  }
+      window.scrollTo({
+        top: window.innerHeight,
+        behavior: "smooth",
+      });
+    }, 100);
+  };
 
-  async function submitRsvp(event) {
+  const submitRsvp = async (event) => {
     event.preventDefault();
 
-    const cleanName = name.trim();
+    const name = guestName.trim();
 
-    if (!cleanName) {
+    if (!name) {
       setRsvpError("Escribe tu nombre completo.");
       return;
     }
 
-    setRsvpState("loading");
+    setRsvpLoading(true);
     setRsvpError("");
 
     try {
@@ -147,1934 +208,1495 @@ export default function Home() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          name: cleanName,
+          name,
         }),
       });
 
       const data = await response.json();
 
       if (!response.ok || !data.valid) {
-        setRsvpState("error");
         setRsvpError(
-          "No encontramos ese nombre en nuestra lista. Revisa que esté escrito completo."
+          data.message ||
+            "No encontramos tu nombre en nuestra lista."
         );
         return;
       }
 
-      setConfirmedSeats(data.seats);
-      setRsvpState("success");
-
-      setTimeout(() => {
-        document
-          .getElementById("confirmation")
-          ?.scrollIntoView({
-            behavior: "smooth",
-            block: "start",
-          });
-      }, 150);
+      setConfirmedSeats(data.seats || 1);
     } catch {
-      setRsvpState("error");
       setRsvpError(
-        "No pudimos procesar la confirmación. Inténtalo nuevamente."
+        "No pudimos confirmar en este momento. Inténtalo nuevamente."
       );
+    } finally {
+      setRsvpLoading(false);
     }
-  }
+  };
 
   return (
-    <main className="site">
-
-      {/* =====================================================
-          PORTADA
-      ===================================================== */}
-
-      {!started && (
-        <section
-          className="cover"
-          aria-label="Portada de la invitación"
-        >
-          <PaperTexture />
-
-          <div className="cover-watercolor">
-            <div className="cover-photo-bleed" />
-
-            <Photo
-              src={COUPLE_PHOTOS[0]}
-              alt="Mauro y Yeluxa"
-              className="cover-photo"
-            />
-          </div>
-
-          <div className="cover-copy">
-
-            <div className="cover-title">
-              NOS CASAMOS
-            </div>
-
-            <h1 className="script cover-names">
-              Mauro &amp; Yeluxa
-            </h1>
-
-            <div className="cover-save">
-              SAVE THE DATE
-            </div>
-
-          </div>
-
-          <button
-            type="button"
-            className="enter-mark"
-            onClick={enterInvitation}
-            aria-label="Continuar"
-          >
-            …
-          </button>
-        </section>
-      )}
-
-      <div
-        className={`invitation ${
-          started ? "is-visible" : ""
-        }`}
-      >
-
-        {/* =====================================================
-            HOJA 2 — SAVE THE DATE
-        ===================================================== */}
-
-        <section
-          id="save-the-date"
-          className="section save-section"
-        >
-          <PaperTexture />
-
-          <div className="section-inner save-inner">
-
-            <div className="eyebrow">
-              NUESTRA BODA
-            </div>
-
-            <h2 className="script section-title">
-              Reserva
-            </h2>
-
-            <div className="reserve-label">
-              ESTA FECHA
-            </div>
-
-            <div className="date-lockup">
-
-              <div className="date-day">
-                SÁBADO
-              </div>
-
-              <div className="date-number">
-                06
-              </div>
-
-              <div className="date-month">
-                MARZO · 2027
-              </div>
-
-              <div className="date-place">
-                CARTAGENA DE INDIAS
-              </div>
-
-            </div>
-
-            <Countdown />
-
-            <a
-              className="calendar-button"
-              href={calendarUrl}
-              target="_blank"
-              rel="noreferrer"
-            >
-              <span>+</span>
-              AÑADIR A MI CALENDARIO
-            </a>
-
-            <div
-              className="cartagena-strip"
-              aria-label="Cartagena de Indias"
-            >
-              {CARTAGENA_PHOTOS.map(
-                (photo, index) => (
-                  <div
-                    className={`cartagena-photo photo-${index + 1}`}
-                    key={photo}
-                  >
-                    <Photo
-                      src={photo}
-                      alt={`Cartagena de Indias ${index + 1}`}
-                    />
-                  </div>
-                )
-              )}
-            </div>
-
-          </div>
-        </section>
-
-
-        {/* =====================================================
-            HOJA 3 — NUESTRA HISTORIA
-        ===================================================== */}
-
-        <section className="section story-section">
-          <PaperTexture />
-
-          <div className="section-inner story-inner">
-
-            <div className="eyebrow">
-              NUESTRA HISTORIA
-            </div>
-
-            <h2 className="story-heading">
-
-              <span>
-                La vida es más
-              </span>
-
-              <strong className="script">
-                linda
-              </strong>
-
-              <span>
-                cuando la compartimos.
-              </span>
-
-            </h2>
-
-            <div className="story-collage">
-
-              <div className="story-photo story-photo-one">
-                <Photo
-                  src={COUPLE_PHOTOS[1]}
-                  alt="Mauro y Yeluxa"
-                />
-              </div>
-
-              <div className="story-photo story-photo-two">
-                <Photo
-                  src={COUPLE_PHOTOS[2]}
-                  alt="Mauro y Yeluxa"
-                />
-              </div>
-
-              <div className="story-photo story-photo-three">
-                <Photo
-                  src={COUPLE_PHOTOS[0]}
-                  alt="Mauro y Yeluxa"
-                />
-              </div>
-
-            </div>
-
-          </div>
-        </section>
-
-
-        {/* =====================================================
-            HOJA 4 — DRESS CODE
-        ===================================================== */}
-
-        <section className="section dress-section">
-
-          <PaperTexture tone="olive" />
-
-          <div className="section-inner dress-inner">
-
-            <div className="eyebrow light">
-              DRESS CODE
-            </div>
-
-            <h2 className="script dress-title">
-              Formal
-            </h2>
-
-            <div className="dress-models">
-
-              {/* HOMBRES */}
-
-              <div className="model-panel">
-
-                <div className="model-brush">
-
-                  <div
-                    className="model-silhouette man"
-                    aria-hidden="true"
-                  >
-
-                    <div className="head" />
-                    <div className="body" />
-                    <div className="leg leg-left" />
-                    <div className="leg leg-right" />
-
-                  </div>
-
-                </div>
-
-                <div className="model-label">
-                  HOMBRES
-                </div>
-
-                <p>
-                  Traje formal
-                </p>
-
-              </div>
-
-
-              {/* MUJERES */}
-
-              <div className="model-panel">
-
-                <div className="model-brush">
-
-                  <div
-                    className="model-silhouette woman"
-                    aria-hidden="true"
-                  >
-
-                    <div className="head" />
-                    <div className="body" />
-                    <div className="dress" />
-
-                  </div>
-
-                </div>
-
-                <div className="model-label">
-                  MUJERES
-                </div>
-
-                <p>
-                  Vestido formal largo
-                </p>
-
-              </div>
-
-            </div>
-
-            <div className="dress-note">
-              EL BLANCO ESTÁ RESERVADO
-              PARA LOS NOVIOS
-            </div>
-
-            <a
-              className="pinterest-link"
-              href={PINTEREST_URL}
-              target="_blank"
-              rel="noreferrer"
-              aria-label="Inspiración de vestuario"
-            >
-              +
-            </a>
-
-          </div>
-        </section>
-
-
-        {/* =====================================================
-            HOJA 5 — RSVP
-        ===================================================== */}
-
-        <section className="section rsvp-section">
-
-          <PaperTexture tone="wine" />
-
-          <div className="section-inner rsvp-inner">
-
-            <div className="eyebrow light">
-              RSVP
-            </div>
-
-            <h2 className="rsvp-heading">
-              CONFIRMA
-              <span className="script">
-                asistencia
-              </span>
-            </h2>
-
-            <p className="rsvp-intro">
-              Será un honor compartir
-              este día contigo.
-            </p>
-
-            <form
-              className="rsvp-form"
-              onSubmit={submitRsvp}
-            >
-
-              <label htmlFor="guest-name">
-                NOMBRE COMPLETO
-              </label>
-
-              <input
-                id="guest-name"
-                value={name}
-                onChange={(event) => {
-                  setName(event.target.value);
-                  setRsvpState("idle");
-                  setRsvpError("");
-                }}
-                placeholder="Escribe tu nombre"
-                autoComplete="name"
-              />
-
-              {rsvpError && (
-                <p className="form-error">
-                  {rsvpError}
-                </p>
-              )}
-
-              <button
-                type="submit"
-                className="submit-button"
-                disabled={rsvpState === "loading"}
-              >
-                {rsvpState === "loading"
-                  ? "VERIFICANDO…"
-                  : "CONFIRMAR ASISTENCIA"}
-              </button>
-
-            </form>
-
-          </div>
-        </section>
-
-
-        {/* =====================================================
-            HOJA 6 — CONFIRMACIÓN OCULTA
-        ===================================================== */}
-
-        {rsvpState === "success" && (
-          <section
-            id="confirmation"
-            className="section confirmation-section"
-          >
-
-            <PaperTexture />
-
-            <div className="section-inner confirmation-inner">
-
-              <div className="eyebrow">
-                ¡GRACIAS!
-              </div>
-
-              <h2 className="script confirmation-title">
-                Tu asistencia
-              </h2>
-
-              <p className="confirmation-subtitle">
-                TU ASISTENCIA HA SIDO CONFIRMADA
-              </p>
-
-              <div className="confirmation-postcard">
-
-                <Photo
-                  src="/postal-cartagena.jpg"
-                  alt="Cartagena de Indias en acuarela"
-                />
-
-                <div className="postcard-copy">
-                  <span>
-                    CARTAGENA DE INDIAS
-                  </span>
-
-                  <small>
-                    06 MARZO · 2027
-                  </small>
-                </div>
-
-              </div>
-
-              <div className="confirmation-seats">
-
-                <span>
-                  CUPOS CONFIRMADOS
-                </span>
-
-                <strong>
-                  {confirmedSeats}
-                </strong>
-
-              </div>
-
-              <p className="confirmation-message">
-                Muy pronto te enviaremos
-                más detalles.
-              </p>
-
-            </div>
-          </section>
-        )}
-
-
-        {/* =====================================================
-            FOOTER
-        ===================================================== */}
-
-        <footer className="footer">
-
-          <span className="script">
-            Mauro &amp; Yeluxa
-          </span>
-
-          <small>
-            CARTAGENA DE INDIAS · 06.03.2027
-          </small>
-
-        </footer>
-
-      </div>
-
-
-      {/* =====================================================
-          ESTILOS
-      ===================================================== */}
-
-      <style jsx global>{`
-
-        :root {
-          --paper: #f7f2e8;
-          --paper-light: #fffaf1;
-          --wine: #632732;
-          --wine-dark: #4e2029;
-          --olive: #5b6848;
-          --olive-dark: #4c593d;
-          --ink: #332c28;
-          --white: #fffdf7;
-
-          --script:
+    <main className="wedding-page">
+      <style>{`
+        :global(*) {
+          box-sizing: border-box;
+        }
+
+        :global(html) {
+          scroll-behavior: smooth;
+        }
+
+        :global(body) {
+          margin: 0;
+          background: #ffffff;
+          color: #3a2928;
+        }
+
+        :global(button),
+        :global(input) {
+          font: inherit;
+        }
+
+        .wedding-page {
+          width: 100%;
+          overflow-x: hidden;
+          background: #ffffff;
+        }
+
+        /* =========================
+           SHARED PAPER
+        ========================= */
+
+        .paper-section {
+          position: relative;
+          overflow: hidden;
+          background: #ffffff;
+        }
+
+        .paper-texture {
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          overflow: hidden;
+        }
+
+        .paper-grain {
+          position: absolute;
+          inset: 0;
+          opacity: .18;
+          background-image:
+            radial-gradient(
+              rgba(75,55,45,.08) .65px,
+              transparent .65px
+            );
+          background-size: 6px 6px;
+        }
+
+        .watercolor {
+          position: absolute;
+          display: block;
+          border-radius: 50%;
+          filter: blur(1px);
+          opacity: .35;
+          mix-blend-mode: multiply;
+        }
+
+        .watercolor-one {
+          width: 260px;
+          height: 190px;
+          top: -80px;
+          left: -80px;
+          background: #e7b9a5;
+          transform: rotate(-18deg);
+        }
+
+        .watercolor-two {
+          width: 250px;
+          height: 190px;
+          right: -100px;
+          top: 10px;
+          background: #aeb8a0;
+          transform: rotate(22deg);
+        }
+
+        .watercolor-three {
+          width: 220px;
+          height: 170px;
+          left: -90px;
+          bottom: -70px;
+          background: #8e4d58;
+          opacity: .22;
+          transform: rotate(25deg);
+        }
+
+        .watercolor-four {
+          width: 260px;
+          height: 170px;
+          right: -110px;
+          bottom: -60px;
+          background: #e4b49e;
+          opacity: .28;
+          transform: rotate(-20deg);
+        }
+
+        /* =========================
+           COVER
+        ========================= */
+
+        .cover {
+          position: relative;
+          min-height: 100svh;
+          background: #ffffff;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: flex-start;
+          padding:
+            max(7vh, 52px)
+            18px
+            35px;
+          text-align: center;
+        }
+
+        .cover-content {
+          position: relative;
+          z-index: 4;
+          width: 100%;
+          max-width: 520px;
+        }
+
+        .cover-kicker {
+          margin: 0 0 13px;
+          color: #6c3039;
+          font-family:
+            var(--font-dm-sans),
+            Arial,
+            sans-serif;
+          font-size: 10px;
+          font-weight: 500;
+          letter-spacing: .42em;
+          text-transform: uppercase;
+        }
+
+        .cover-names {
+          margin: 0;
+          color: #6a2731;
+          font-family:
             "Slight Script",
             "Brittany Signature",
             "Allura",
             "Great Vibes",
             cursive;
-
-          --serif:
-            "Cormorant Garamond",
-            Georgia,
-            serif;
-        }
-
-
-        * {
-          box-sizing: border-box;
-        }
-
-
-        html {
-          scroll-behavior: smooth;
-        }
-
-
-        body {
-          margin: 0;
-          background: var(--paper);
-          color: var(--ink);
-          font-family: var(--serif);
-        }
-
-
-        button,
-        input {
-          font: inherit;
-        }
-
-
-        a,
-        button {
-          -webkit-tap-highlight-color: transparent;
-        }
-
-
-        .site {
-          min-height: 100vh;
-          overflow-x: hidden;
-          background: var(--paper);
-        }
-
-
-        /* TEXTURA */
-
-        .paper-texture {
-          position: absolute;
-          inset: 0;
-          overflow: hidden;
-          pointer-events: none;
-          z-index: 0;
-
-          background:
-            radial-gradient(
-              circle at 12% 20%,
-              rgba(100,80,60,.09) 0 1px,
-              transparent 1.5px
-            ),
-            radial-gradient(
-              circle at 80% 70%,
-              rgba(100,80,60,.06) 0 1px,
-              transparent 1.5px
-            ),
-            var(--paper);
-
-          background-size:
-            13px 13px,
-            17px 17px,
-            auto;
-        }
-
-
-        .brush,
-        .splatter {
-          position: absolute;
-          display: block;
-        }
-
-
-        .brush {
-          border-radius:
-            48% 52% 55% 45%;
-          filter: blur(2px);
-        }
-
-
-        .brush-a {
-          width: 320px;
-          height: 130px;
-          top: -40px;
-          left: -100px;
-          background:
-            rgba(205,157,123,.34);
-          transform: rotate(-17deg);
-        }
-
-
-        .brush-b {
-          width: 330px;
-          height: 120px;
-          right: -100px;
-          bottom: 8%;
-          background:
-            rgba(89,99,74,.19);
-          transform: rotate(-20deg);
-        }
-
-
-        .brush-c {
-          width: 250px;
-          height: 100px;
-          left: -100px;
-          bottom: 4%;
-          background:
-            rgba(103,40,50,.13);
-          transform: rotate(18deg);
-        }
-
-
-        .splatter {
-          width: 5px;
-          height: 5px;
-          border-radius: 50%;
-          background:
-            rgba(103,40,50,.25);
-        }
-
-
-        .splatter-a {
-          top: 23%;
-          right: 10%;
-
-          box-shadow:
-            -35px 18px 0 rgba(205,157,123,.35),
-            20px 40px 0 rgba(89,99,74,.25),
-            -75px 90px 0 rgba(103,40,50,.18);
-        }
-
-
-        .splatter-b {
-          bottom: 22%;
-          left: 8%;
-
-          box-shadow:
-            35px -25px 0 rgba(205,157,123,.3),
-            70px 15px 0 rgba(89,99,74,.22);
-        }
-
-
-        /* PORTADA */
-
-        .cover {
-          position: fixed;
-          inset: 0;
-          z-index: 50;
-          min-height: 100svh;
-
-          display: grid;
-          place-items: center;
-
-          overflow: hidden;
-          background: var(--paper);
-        }
-
-
-        .cover-watercolor {
-          position: absolute;
-          inset: 12vh 6vw 14vh;
-
-          overflow: visible;
-
-          clip-path:
-            polygon(
-              4% 1%,
-              96% 0,
-              100% 5%,
-              98% 94%,
-              94% 100%,
-              5% 98%,
-              0 93%,
-              2% 6%
-            );
-        }
-
-
-        .cover-watercolor::before {
-          content: "";
-          position: absolute;
-          inset: -5%;
-
-          background:
-            radial-gradient(
-              ellipse at 15% 20%,
-              rgba(205,157,123,.65),
-              transparent 28%
-            ),
-            radial-gradient(
-              ellipse at 88% 27%,
-              rgba(89,99,74,.40),
-              transparent 28%
-            ),
-            radial-gradient(
-              ellipse at 20% 92%,
-              rgba(103,40,50,.36),
-              transparent 30%
-            ),
-            radial-gradient(
-              ellipse at 88% 86%,
-              rgba(205,157,123,.48),
-              transparent 30%
-            );
-
-          filter: blur(10px);
-        }
-
-
-        .cover-photo-bleed {
-          position: absolute;
-          inset: 3%;
-          background:
-            rgba(255,255,255,.55);
-        }
-
-
-        .cover-photo {
-          position: relative;
-          z-index: 2;
-
-          width: 94%;
-          height: 94%;
-          margin: 3%;
-
-          object-fit: cover;
-          display: block;
-
-          clip-path:
-            polygon(
-              2% 1%,
-              97% 0,
-              100% 5%,
-              98% 94%,
-              94% 100%,
-              5% 98%,
-              0 93%,
-              2% 6%
-            );
-        }
-
-
-        .cover-copy {
-          position: relative;
-          z-index: 5;
-
-          width: 90vw;
-          text-align: center;
-
-          color: var(--wine);
-        }
-
-
-        .cover-title {
-          font-size:
-            clamp(1.45rem, 6vw, 3rem);
-
-          letter-spacing:
-            .16em;
-        }
-
-
-        .cover-names {
-          margin:
-            .35rem 0 .9rem;
-
-          font-size:
-            clamp(4.1rem, 17vw, 7rem);
-
-          line-height: .82;
+          font-size: clamp(55px, 17vw, 92px);
           font-weight: 400;
+          line-height: .78;
+          letter-spacing: -.035em;
         }
 
-
-        .cover-save {
-          font-size: .7rem;
-          letter-spacing: .34em;
+        .cover-names span {
+          display: block;
         }
 
-
-        .enter-mark {
-          position: absolute;
-          z-index: 7;
-
-          left: 50%;
-          bottom: 7vh;
-
-          transform:
-            translateX(-50%);
-
-          width: 76px;
-          height: 76px;
-
-          border:
-            1px solid rgba(103,40,50,.5);
-
-          border-radius: 50%;
-
-          background:
-            rgba(255,253,248,.9);
-
-          color: var(--wine);
-
-          font-size: 2rem;
-          cursor: pointer;
+        .cover-subtitle {
+          margin: 23px 0 0;
+          color: #6a2731;
+          font-family:
+            var(--font-dm-sans),
+            Arial,
+            sans-serif;
+          font-size: 9px;
+          letter-spacing: .42em;
+          text-transform: uppercase;
         }
 
-
-        .enter-mark:active {
-          transform:
-            translateX(-50%)
-            scale(.94);
-        }
-
-
-        /* GENERAL */
-
-        .invitation {
-          opacity: 0;
-          pointer-events: none;
-          min-height: 100vh;
-        }
-
-
-        .invitation.is-visible {
-          opacity: 1;
-          pointer-events: auto;
-        }
-
-
-        .section {
+        .cover-photo-area {
           position: relative;
-
-          min-height: 100svh;
-
+          width: min(94vw, 520px);
+          margin-top: 32px;
+          flex: 1;
+          min-height: 0;
           display: flex;
           align-items: center;
           justify-content: center;
-
-          overflow: hidden;
-
-          padding:
-            5.5rem 1.2rem;
         }
 
-
-        .section-inner {
+        .watercolor-photo {
           position: relative;
+          width: 100%;
+          max-height: 57vh;
+          aspect-ratio: 4 / 5;
+          overflow: hidden;
+          isolation: isolate;
+
+          /*
+            Organic painted edge rather than
+            a rectangular/polaroid frame.
+          */
+          -webkit-mask-image:
+            radial-gradient(
+              ellipse at center,
+              #000 72%,
+              rgba(0,0,0,.95) 78%,
+              transparent 94%
+            );
+          mask-image:
+            radial-gradient(
+              ellipse at center,
+              #000 72%,
+              rgba(0,0,0,.95) 78%,
+              transparent 94%
+            );
+        }
+
+        .watercolor-photo img {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          object-position: center 48%;
+          display: block;
+          z-index: 1;
+          filter: saturate(.96) contrast(.98);
+        }
+
+        .photo-wash {
+          position: absolute;
           z-index: 2;
+          pointer-events: none;
+          filter: blur(8px);
+          mix-blend-mode: screen;
+          opacity: .42;
+        }
 
-          width: min(100%, 760px);
+        .wash-one {
+          width: 40%;
+          height: 35%;
+          left: -12%;
+          top: -10%;
+          background: #efc0aa;
+          transform: rotate(-18deg);
+        }
 
+        .wash-two {
+          width: 40%;
+          height: 32%;
+          right: -14%;
+          top: 8%;
+          background: #aeb89f;
+          transform: rotate(18deg);
+        }
+
+        .wash-three {
+          width: 45%;
+          height: 28%;
+          left: 25%;
+          bottom: -12%;
+          background: #d8a190;
+          transform: rotate(-8deg);
+        }
+
+        .brush-edge {
+          position: absolute;
+          z-index: 4;
+          pointer-events: none;
+          background:
+            repeating-linear-gradient(
+              105deg,
+              rgba(255,255,255,.95) 0 5px,
+              rgba(255,255,255,.55) 6px 11px,
+              transparent 12px 18px
+            );
+          filter: blur(1px);
+          opacity: .92;
+        }
+
+        .brush-top {
+          top: -3%;
+          left: -5%;
+          width: 110%;
+          height: 12%;
+          transform: rotate(-1deg);
+        }
+
+        .brush-bottom {
+          bottom: -4%;
+          left: -5%;
+          width: 110%;
+          height: 13%;
+          transform: rotate(1deg);
+        }
+
+        .brush-left {
+          left: -4%;
+          top: 3%;
+          width: 10%;
+          height: 94%;
+          background:
+            repeating-linear-gradient(
+              180deg,
+              rgba(255,255,255,.9) 0 7px,
+              rgba(255,255,255,.55) 8px 14px,
+              transparent 15px 22px
+            );
+        }
+
+        .brush-right {
+          right: -4%;
+          top: 3%;
+          width: 10%;
+          height: 94%;
+          background:
+            repeating-linear-gradient(
+              180deg,
+              rgba(255,255,255,.9) 0 7px,
+              rgba(255,255,255,.55) 8px 14px,
+              transparent 15px 22px
+            );
+        }
+
+        .photo-fallback,
+        .watercolor-photo-fallback {
+          width: 100%;
+          aspect-ratio: 4 / 5;
+          background:
+            linear-gradient(
+              145deg,
+              #ddd4c7,
+              #b7aa99
+            );
+        }
+
+        .cover-button {
+          position: relative;
+          z-index: 8;
+          width: 78px;
+          height: 78px;
+          margin-top: -3px;
+          border-radius: 50%;
+          border: 1px solid rgba(106,39,49,.38);
+          background: rgba(255,255,255,.96);
+          color: #6a2731;
+          box-shadow:
+            0 10px 25px rgba(74,42,38,.08);
+          font-size: 21px;
+          letter-spacing: .15em;
+          padding-left: 6px;
+          cursor: pointer;
+        }
+
+        /* =========================
+           SAVE THE DATE
+        ========================= */
+
+        .save-date {
+          min-height: 100svh;
+          padding:
+            100px 22px
+            80px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
           text-align: center;
         }
 
-
-        .eyebrow {
-          font-size: .68rem;
-          letter-spacing: .34em;
+        .section-kicker {
+          position: relative;
+          z-index: 2;
+          margin: 0 0 16px;
+          color: #6a2731;
+          font-family:
+            var(--font-dm-sans),
+            Arial,
+            sans-serif;
+          font-size: 9px;
+          letter-spacing: .36em;
           text-transform: uppercase;
         }
 
-
-        .light {
-          color: var(--white);
+        .script-title {
+          position: relative;
+          z-index: 2;
+          margin: 0;
+          color: #6a2731;
+          font-family:
+            "Slight Script",
+            "Brittany Signature",
+            "Allura",
+            "Great Vibes",
+            cursive;
+          font-size: clamp(58px, 16vw, 88px);
+          font-weight: 400;
+          line-height: .85;
         }
 
+        .save-label {
+          position: relative;
+          z-index: 2;
+          margin: 14px 0 32px;
+          color: #6a2731;
+          font-family:
+            var(--font-dm-sans),
+            Arial,
+            sans-serif;
+          font-size: 9px;
+          letter-spacing: .4em;
+          text-transform: uppercase;
+        }
 
-        .script {
-          font-family: var(--script);
+        .date-day {
+          position: relative;
+          z-index: 2;
+          margin: 0;
+          color: #6a2731;
+          font-family:
+            var(--font-dm-sans),
+            Arial,
+            sans-serif;
+          font-size: 11px;
+          letter-spacing: .42em;
+          text-transform: uppercase;
+        }
+
+        .date-number {
+          position: relative;
+          z-index: 2;
+          margin: 4px 0;
+          color: #6a2731;
+          font-family:
+            "Slight Script",
+            "Brittany Signature",
+            "Allura",
+            cursive;
+          font-size: 86px;
+          line-height: .8;
+        }
+
+        .date-month {
+          position: relative;
+          z-index: 2;
+          color: #6a2731;
+          font-family:
+            var(--font-dm-sans),
+            Arial,
+            sans-serif;
+          font-size: 10px;
+          letter-spacing: .35em;
+          text-transform: uppercase;
+        }
+
+        .location-small {
+          position: relative;
+          z-index: 2;
+          margin-top: 25px;
+          color: #69645d;
+          font-family:
+            var(--font-dm-sans),
+            Arial,
+            sans-serif;
+          font-size: 9px;
+          letter-spacing: .28em;
+        }
+
+        .countdown {
+          position: relative;
+          z-index: 2;
+          display: grid;
+          grid-template-columns: repeat(4, auto);
+          gap: 17px;
+          margin: 34px 0 25px;
+        }
+
+        .countdown div {
+          display: flex;
+          flex-direction: column;
+          gap: 5px;
+        }
+
+        .countdown strong {
+          color: #6a2731;
+          font-family:
+            var(--font-cormorant),
+            Georgia,
+            serif;
+          font-size: 25px;
           font-weight: 400;
         }
 
-
-        /* FECHA */
-
-        .section-title {
-          margin:
-            .3rem 0 .15rem;
-
-          color: var(--wine);
-
-          font-size:
-            clamp(4.5rem, 18vw, 7.5rem);
-
-          line-height: .75;
+        .countdown span {
+          color: #777169;
+          font-family:
+            var(--font-dm-sans),
+            Arial,
+            sans-serif;
+          font-size: 7px;
+          letter-spacing: .15em;
         }
 
-
-        .reserve-label {
-          color: var(--wine);
-
-          font-size: .72rem;
-          letter-spacing: .28em;
+        .calendar-button {
+          position: relative;
+          z-index: 2;
+          border: 1px solid rgba(106,39,49,.35);
+          background: transparent;
+          color: #6a2731;
+          padding: 13px 20px;
+          font-family:
+            var(--font-dm-sans),
+            Arial,
+            sans-serif;
+          font-size: 8px;
+          letter-spacing: .2em;
           text-transform: uppercase;
         }
 
-
-        .date-lockup {
-          margin-top: 2rem;
-          color: var(--wine);
+        .cartagena-strip {
+          position: relative;
+          z-index: 2;
+          width: min(100%, 560px);
+          margin-top: 45px;
+          display: grid;
+          grid-template-columns: 1.1fr .9fr .8fr;
+          gap: 7px;
         }
 
+        .cartagena-strip img {
+          width: 100%;
+          aspect-ratio: 1 / 1.15;
+          object-fit: cover;
+          display: block;
+          filter: saturate(.85);
+        }
 
-        .date-day,
-        .date-month,
-        .date-place {
+        /* =========================
+           STORY
+        ========================= */
+
+        .story {
+          position: relative;
+          padding: 105px 20px 120px;
+          text-align: center;
+        }
+
+        .story-copy {
+          position: relative;
+          z-index: 2;
+          width: min(100%, 680px);
+          margin: 0 auto;
+        }
+
+        .story-title {
+          position: relative;
+          z-index: 2;
+          margin: 0;
+          color: #6a2731;
+          font-family:
+            "Slight Script",
+            "Brittany Signature",
+            "Allura",
+            cursive;
+          font-size: clamp(50px, 14vw, 78px);
+          font-weight: 400;
+          line-height: .88;
+        }
+
+        .story-quote {
+          position: relative;
+          z-index: 2;
+          margin: 22px auto 48px;
+          max-width: 390px;
+          color: #4d4943;
+          font-family:
+            var(--font-cormorant),
+            Georgia,
+            serif;
+          font-size: 25px;
+          font-style: italic;
+          line-height: 1.25;
+        }
+
+        .story-photos {
+          position: relative;
+          z-index: 2;
+          width: min(100%, 650px);
+          margin: 0 auto;
+          display: grid;
+          grid-template-columns: 1.05fr .85fr;
+          gap: 18px;
+          align-items: start;
+        }
+
+        .story-photo {
+          position: relative;
+          overflow: hidden;
+        }
+
+        .story-photo:nth-child(2) {
+          margin-top: 50px;
+        }
+
+        .story-photo:nth-child(3) {
+          grid-column: 1 / -1;
+          width: 72%;
+          margin: -5px auto 0;
+        }
+
+        .story-photo img {
+          width: 100%;
+          display: block;
+          aspect-ratio: 4 / 5;
+          object-fit: cover;
+        }
+
+        /* =========================
+           DRESS CODE
+        ========================= */
+
+        .dress {
+          position: relative;
+          min-height: 100svh;
+          padding: 100px 20px;
+          background: #59634a;
+          color: #ffffff;
+          overflow: hidden;
+          text-align: center;
+        }
+
+        .dress::before {
+          content: "";
+          position: absolute;
+          inset: -10%;
+          opacity: .13;
+          background:
+            radial-gradient(
+              ellipse at 20% 20%,
+              #d4d9c8 0 10%,
+              transparent 32%
+            ),
+            radial-gradient(
+              ellipse at 85% 75%,
+              #b7c1a8 0 8%,
+              transparent 30%
+            );
+          filter: blur(8px);
+        }
+
+        .dress-content {
+          position: relative;
+          z-index: 2;
+          width: min(100%, 720px);
+          margin: 0 auto;
+        }
+
+        .dress .section-kicker {
+          color: #f5f1e8;
+        }
+
+        .dress-title {
+          margin: 0;
+          font-family:
+            "Slight Script",
+            "Brittany Signature",
+            "Allura",
+            cursive;
+          font-size: clamp(65px, 18vw, 100px);
+          font-weight: 400;
+          line-height: .8;
+        }
+
+        .dress-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 18px;
+          margin-top: 45px;
+        }
+
+        .dress-person {
+          min-height: 390px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: flex-end;
+        }
+
+        .dress-illustration {
+          position: relative;
+          width: 150px;
+          height: 270px;
+          margin-bottom: 15px;
+          opacity: .92;
+          filter:
+            drop-shadow(
+              0 5px 5px rgba(0,0,0,.08)
+            );
+        }
+
+        .figure-head {
+          position: absolute;
+          top: 0;
+          left: 50%;
+          width: 35px;
+          height: 43px;
+          transform: translateX(-50%);
+          border-radius: 48% 48% 45% 45%;
+          background: #d8b39d;
+        }
+
+        .figure-body {
+          position: absolute;
+          top: 37px;
+          left: 50%;
+          width: 48px;
+          height: 75px;
+          transform: translateX(-50%);
+          background: rgba(42,42,35,.9);
+          border-radius: 18px 18px 8px 8px;
+        }
+
+        .dress-woman .figure-body {
+          background: #d99472;
+        }
+
+        .figure-jacket {
+          position: absolute;
+          top: 41px;
+          left: 50%;
+          width: 64px;
+          height: 85px;
+          transform: translateX(-50%);
+          background: #262823;
+          clip-path: polygon(
+            20% 0,
+            80% 0,
+            100% 100%,
+            0 100%
+          );
+        }
+
+        .figure-shirt {
+          position: absolute;
+          top: 43px;
+          left: 50%;
+          width: 28px;
+          height: 52px;
+          transform: translateX(-50%);
+          background: #f5f1e8;
+          clip-path: polygon(
+            50% 0,
+            100% 25%,
+            72% 100%,
+            28% 100%,
+            0 25%
+          );
+        }
+
+        .figure-tie {
+          position: absolute;
+          z-index: 2;
+          top: 44px;
+          left: 50%;
+          width: 7px;
+          height: 52px;
+          transform: translateX(-50%);
+          background: #6a2731;
+          clip-path: polygon(
+            50% 0,
+            100% 18%,
+            62% 100%,
+            38% 100%,
+            0 18%
+          );
+        }
+
+        .figure-leg {
+          position: absolute;
+          top: 113px;
+          width: 20px;
+          height: 125px;
+          background: #24251f;
+        }
+
+        .figure-leg.left {
+          left: 51px;
+          transform: rotate(2deg);
+        }
+
+        .figure-leg.right {
+          right: 51px;
+          transform: rotate(-2deg);
+        }
+
+        .figure-dress {
+          position: absolute;
+          top: 70px;
+          left: 50%;
+          width: 118px;
+          height: 190px;
+          transform: translateX(-50%);
+          background: #d99472;
+          clip-path: polygon(
+            38% 0,
+            62% 0,
+            72% 35%,
+            100% 100%,
+            0 100%,
+            28% 35%
+          );
+        }
+
+        .figure-arm {
+          position: absolute;
+          top: 77px;
+          width: 12px;
+          height: 105px;
+          border-radius: 12px;
+          background: #d8b39d;
+        }
+
+        .figure-arm.left {
+          left: 28px;
+          transform: rotate(8deg);
+        }
+
+        .figure-arm.right {
+          right: 28px;
+          transform: rotate(-8deg);
+        }
+
+        .dress-person h3 {
+          margin: 0;
+          font-family:
+            var(--font-dm-sans),
+            Arial,
+            sans-serif;
+          font-size: 9px;
           letter-spacing: .32em;
           text-transform: uppercase;
         }
 
-
-        .date-day {
-          font-size: .78rem;
+        .dress-person p {
+          margin: 9px 0 0;
+          color: rgba(255,255,255,.82);
+          font-family:
+            var(--font-cormorant),
+            Georgia,
+            serif;
+          font-size: 21px;
         }
-
-
-        .date-number {
-          font-size:
-            clamp(6rem, 25vw, 10rem);
-
-          line-height: .76;
-
-          margin: .2rem 0;
-        }
-
-
-        .date-month {
-          font-size: .88rem;
-        }
-
-
-        .date-place {
-          margin-top: 1.7rem;
-          font-size: .78rem;
-        }
-
-
-        .countdown {
-          display: grid;
-
-          grid-template-columns:
-            repeat(4, 1fr);
-
-          width:
-            min(100%, 520px);
-
-          margin:
-            2.8rem auto 2rem;
-
-          gap: .4rem;
-        }
-
-
-        .count-item {
-          border-left:
-            1px solid rgba(103,40,50,.3);
-        }
-
-
-        .count-item:first-child {
-          border-left: 0;
-        }
-
-
-        .count-item strong {
-          display: block;
-
-          color: var(--wine);
-
-          font-size:
-            clamp(1.5rem, 6vw, 2.7rem);
-
-          font-weight: 400;
-        }
-
-
-        .count-item span {
-          display: block;
-
-          margin-top: .3rem;
-
-          color: #746b63;
-
-          font-size: .44rem;
-          letter-spacing: .16em;
-        }
-
-
-        .calendar-button {
-          display: inline-flex;
-
-          align-items: center;
-          justify-content: center;
-          gap: .55rem;
-
-          min-height: 52px;
-
-          padding:
-            0 1.3rem;
-
-          border:
-            1px solid var(--wine);
-
-          border-radius: 999px;
-
-          color: var(--wine);
-
-          text-decoration: none;
-
-          font-size: .64rem;
-          letter-spacing: .17em;
-        }
-
-
-        .calendar-button span {
-          font-size: 1.1rem;
-        }
-
-
-        .cartagena-strip {
-          display: grid;
-
-          grid-template-columns:
-            repeat(3, 1fr);
-
-          gap: 5px;
-
-          margin:
-            3.5rem -1.2rem -5.5rem;
-
-          height: 25vh;
-          min-height: 180px;
-        }
-
-
-        .cartagena-photo {
-          overflow: hidden;
-        }
-
-
-        .cartagena-photo img {
-          width: 100%;
-          height: 100%;
-
-          object-fit: cover;
-          display: block;
-        }
-
-
-        /* HISTORIA */
-
-        .story-heading {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-
-          margin:
-            1rem auto 2.3rem;
-
-          color: var(--wine);
-
-          font-size:
-            clamp(1.6rem, 7vw, 3rem);
-
-          line-height: .95;
-          font-weight: 400;
-        }
-
-
-        .story-heading strong {
-          margin: .1rem 0;
-
-          font-size:
-            clamp(5rem, 21vw, 9rem);
-
-          line-height: .72;
-        }
-
-
-        .story-collage {
-          position: relative;
-
-          width:
-            min(100%, 700px);
-
-          height: 58vh;
-          min-height: 500px;
-
-          margin: auto;
-        }
-
-
-        .story-photo {
-          position: absolute;
-          overflow: hidden;
-
-          box-shadow:
-            0 12px 30px rgba(70,50,40,.10);
-        }
-
-
-        .story-photo::before {
-          content: "";
-
-          position: absolute;
-          inset: -8%;
-
-          background:
-            linear-gradient(
-              145deg,
-              rgba(205,157,123,.55),
-              rgba(89,99,74,.28),
-              rgba(103,40,50,.35)
-            );
-
-          filter: blur(15px);
-        }
-
-
-        .story-photo img {
-          position: relative;
-          z-index: 1;
-
-          width: 100%;
-          height: 100%;
-
-          object-fit: cover;
-          display: block;
-        }
-
-
-        .story-photo-one {
-          left: 0;
-          top: 0;
-
-          width: 55%;
-          height: 46%;
-
-          transform: rotate(-2deg);
-
-          clip-path:
-            polygon(
-              3% 2%,
-              97% 0,
-              100% 94%,
-              94% 100%,
-              2% 96%,
-              0 8%
-            );
-        }
-
-
-        .story-photo-two {
-          right: 0;
-          top: 11%;
-
-          width: 48%;
-          height: 48%;
-
-          transform: rotate(2deg);
-
-          clip-path:
-            polygon(
-              4% 0,
-              97% 2%,
-              100% 95%,
-              93% 100%,
-              1% 97%,
-              0 5%
-            );
-        }
-
-
-        .story-photo-three {
-          left: 14%;
-          bottom: 0;
-
-          width: 73%;
-          height: 47%;
-
-          transform: rotate(-1deg);
-
-          clip-path:
-            polygon(
-              3% 0,
-              97% 2%,
-              100% 94%,
-              94% 100%,
-              2% 98%,
-              0 5%
-            );
-        }
-
-
-        /* DRESS CODE */
-
-        .dress-section {
-          background: var(--olive);
-          color: var(--white);
-          min-height: 110svh;
-        }
-
-
-        .paper-texture.olive {
-          background: var(--olive);
-        }
-
-
-        .paper-texture.olive .brush-a {
-          width: 430px;
-          height: 140px;
-
-          top: -25px;
-          left: -100px;
-
-          background:
-            rgba(255,255,255,.16);
-
-          transform: rotate(12deg);
-        }
-
-
-        .paper-texture.olive .brush-b {
-          width: 480px;
-          height: 180px;
-
-          right: -150px;
-          top: 32%;
-
-          background:
-            rgba(255,255,255,.12);
-
-          transform: rotate(-19deg);
-        }
-
-
-        .paper-texture.olive .brush-c {
-          width: 500px;
-          height: 170px;
-
-          left: -180px;
-          bottom: 4%;
-
-          background:
-            rgba(255,255,255,.13);
-
-          transform: rotate(-11deg);
-        }
-
-
-        .dress-title {
-          margin:
-            .4rem 0 1.2rem;
-
-          font-size:
-            clamp(4.5rem, 18vw, 7.5rem);
-
-          line-height: .75;
-        }
-
-
-        .dress-models {
-          display: grid;
-
-          grid-template-columns:
-            1fr 1fr;
-
-          gap: 1rem;
-
-          max-width: 700px;
-
-          margin: auto;
-        }
-
-
-        .model-panel {
-          text-align: center;
-        }
-
-
-        .model-brush {
-          position: relative;
-
-          height: 43vh;
-          min-height: 330px;
-
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-
-        .model-brush::before {
-          content: "";
-
-          position: absolute;
-
-          inset:
-            4% 4%;
-
-          background:
-            rgba(255,253,248,.92);
-
-          clip-path:
-            polygon(
-              5% 2%,
-              96% 0,
-              100% 8%,
-              95% 94%,
-              88% 100%,
-              4% 96%,
-              0 10%
-            );
-
-          transform: rotate(-2deg);
-        }
-
-
-        .model-silhouette {
-          position: relative;
-          z-index: 2;
-
-          width: 76%;
-          height: 86%;
-        }
-
-
-        .model-silhouette .head {
-          position: absolute;
-
-          top: 3%;
-          left: 50%;
-
-          width: 24%;
-          aspect-ratio: 1;
-
-          transform: translateX(-50%);
-
-          border-radius: 50%;
-        }
-
-
-        .model-silhouette .body {
-          position: absolute;
-
-          top: 19%;
-          left: 50%;
-
-          transform: translateX(-50%);
-
-          width: 46%;
-          height: 48%;
-        }
-
-
-        .model-silhouette.man .head {
-          background: #1e1e1d;
-        }
-
-
-        .model-silhouette.man .body {
-          background:
-            linear-gradient(
-              90deg,
-              #111 0 44%,
-              #f1eee5 45% 55%,
-              #111 56%
-            );
-
-          clip-path:
-            polygon(
-              22% 0,
-              78% 0,
-              100% 100%,
-              0 100%
-            );
-        }
-
-
-        .model-silhouette .leg {
-          position: absolute;
-
-          top: 63%;
-
-          width: 20%;
-          height: 34%;
-
-          background: #171717;
-        }
-
-
-        .model-silhouette .leg-left {
-          left: 29%;
-          transform: rotate(2deg);
-        }
-
-
-        .model-silhouette .leg-right {
-          right: 29%;
-          transform: rotate(-2deg);
-        }
-
-
-        .model-silhouette.woman .head {
-          background: #c98762;
-        }
-
-
-        .model-silhouette.woman .body {
-          width: 30%;
-          height: 28%;
-
-          background: #d89368;
-
-          clip-path:
-            polygon(
-              25% 0,
-              75% 0,
-              100% 100%,
-              0 100%
-            );
-        }
-
-
-        .model-silhouette.woman .dress {
-          position: absolute;
-
-          top: 37%;
-          left: 50%;
-
-          transform: translateX(-50%);
-
-          width: 82%;
-          height: 61%;
-
-          background:
-            linear-gradient(
-              160deg,
-              #e29a70,
-              #c97857
-            );
-
-          clip-path:
-            polygon(
-              39% 0,
-              61% 0,
-              70% 18%,
-              100% 100%,
-              0 100%,
-              30% 18%
-            );
-        }
-
-
-        .model-label {
-          margin-top: .2rem;
-
-          letter-spacing: .3em;
-          font-size: .68rem;
-        }
-
-
-        .model-panel p {
-          margin:
-            .4rem 0 0;
-
-          font-size: 1rem;
-          font-style: italic;
-        }
-
 
         .dress-note {
-          max-width: 650px;
-
-          margin:
-            1.8rem auto 0;
-
-          padding: 1rem;
-
-          border-top:
-            1px solid rgba(255,255,255,.4);
-
-          border-bottom:
-            1px solid rgba(255,255,255,.4);
-
-          letter-spacing: .18em;
-
-          font-size: .62rem;
+          margin-top: 42px;
+          padding: 20px 10px;
+          border-top: 1px solid rgba(255,255,255,.28);
+          border-bottom: 1px solid rgba(255,255,255,.28);
+          font-family:
+            var(--font-dm-sans),
+            Arial,
+            sans-serif;
+          font-size: 8px;
+          letter-spacing: .22em;
+          line-height: 1.8;
         }
 
-
-        .pinterest-link {
-          display: grid;
-          place-items: center;
-
-          margin:
-            1rem auto 0;
-
-          width: 45px;
-          height: 45px;
-
-          border:
-            1px solid rgba(255,255,255,.6);
-
+        .pinterest-button {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 42px;
+          height: 42px;
+          margin-top: 25px;
+          border: 1px solid rgba(255,255,255,.5);
           border-radius: 50%;
-
-          color: var(--white);
-
+          color: white;
           text-decoration: none;
-
-          font-size: 1.7rem;
+          font-family: Georgia, serif;
+          font-size: 18px;
         }
 
-
-        /* RSVP */
+        /* =========================
+           RSVP
+        ========================= */
 
         .rsvp-section {
-          background: var(--wine-dark);
-          color: var(--white);
+          position: relative;
+          min-height: 100svh;
+          padding: 100px 22px;
+          background: #6a2731;
+          color: #ffffff;
+          text-align: center;
+          overflow: hidden;
         }
 
-
-        .paper-texture.wine {
-          background: var(--wine-dark);
-        }
-
-
-        .paper-texture.wine .brush-a {
-          width: 480px;
-          height: 180px;
-
-          top: -55px;
-          left: -120px;
-
+        .rsvp-section::before {
+          content: "";
+          position: absolute;
+          inset: -15%;
           background:
-            rgba(255,218,207,.22);
-
-          transform: rotate(-20deg);
+            radial-gradient(
+              ellipse at 10% 20%,
+              rgba(255,200,180,.16),
+              transparent 30%
+            ),
+            radial-gradient(
+              ellipse at 85% 75%,
+              rgba(160,180,140,.13),
+              transparent 30%
+            );
+          filter: blur(12px);
         }
 
-
-        .paper-texture.wine .brush-b {
-          width: 520px;
-          height: 190px;
-
-          right: -180px;
-          bottom: -45px;
-
-          background:
-            rgba(255,218,207,.22);
-
-          transform: rotate(-18deg);
+        .rsvp-content {
+          position: relative;
+          z-index: 2;
+          width: min(100%, 470px);
+          margin: auto;
         }
 
+        .rsvp-kicker {
+          margin: 0 0 15px;
+          font-family:
+            var(--font-dm-sans),
+            Arial,
+            sans-serif;
+          font-size: 9px;
+          letter-spacing: .35em;
+        }
 
-        .rsvp-heading {
-          display: flex;
-          flex-direction: column;
-
-          margin:
-            .4rem 0 1rem;
-
-          font-size:
-            clamp(2rem, 8vw, 3.5rem);
-
-          line-height: .8;
-
-          letter-spacing: .12em;
+        .rsvp-title {
+          margin: 0;
+          font-family:
+            "Slight Script",
+            "Brittany Signature",
+            "Allura",
+            cursive;
+          font-size: clamp(52px, 15vw, 80px);
           font-weight: 400;
+          line-height: .85;
         }
 
-
-        .rsvp-heading .script {
-          margin-top: .4rem;
-
-          font-size:
-            clamp(5rem, 20vw, 9rem);
-
-          line-height: .7;
-
-          letter-spacing: 0;
+        .rsvp-text {
+          margin: 25px auto;
+          max-width: 360px;
+          color: rgba(255,255,255,.82);
+          font-family:
+            var(--font-cormorant),
+            Georgia,
+            serif;
+          font-size: 20px;
+          line-height: 1.35;
         }
-
-
-        .rsvp-intro {
-          max-width: 500px;
-
-          margin:
-            1.8rem auto 2.4rem;
-
-          color:
-            rgba(255,253,248,.92);
-
-          font-size: 1.15rem;
-          line-height: 1.4;
-        }
-
 
         .rsvp-form {
-          width:
-            min(100%, 650px);
-
-          margin: auto;
-
-          display: grid;
-
-          gap: .8rem;
-
+          margin-top: 35px;
           text-align: left;
         }
 
-
         .rsvp-form label {
-          font-size: .64rem;
-          letter-spacing: .22em;
-        }
-
-
-        .rsvp-form input {
-          width: 100%;
-
-          background:
-            rgba(255,253,248,.92);
-
-          border: 0;
-
-          border-radius: 18px;
-
-          padding:
-            1.05rem 1.2rem;
-
-          color: var(--ink);
-
-          outline: none;
-        }
-
-
-        .rsvp-form input::placeholder {
-          color: #8a817b;
-          font-style: italic;
-        }
-
-
-        .submit-button {
-          width:
-            min(100%, 380px);
-
-          justify-self: center;
-
-          margin-top: 1rem;
-
-          min-height: 58px;
-
-          border: 0;
-
-          border-radius: 999px;
-
-          background: var(--white);
-
-          color: var(--wine-dark);
-
-          letter-spacing: .15em;
-
-          font-size: .66rem;
-
-          cursor: pointer;
-        }
-
-
-        .submit-button:disabled {
-          opacity: .55;
-        }
-
-
-        .form-error {
-          color: #ffd9d3;
-
-          font-size: .9rem;
-
-          margin: 0;
-
-          text-align: center;
-        }
-
-
-        /* CONFIRMACIÓN */
-
-        .confirmation-section {
-          background: var(--paper);
-          color: var(--wine);
-        }
-
-
-        .confirmation-title {
-          margin:
-            .3rem 0 .5rem;
-
-          font-size:
-            clamp(4rem, 17vw, 7rem);
-
-          line-height: .75;
-        }
-
-
-        .confirmation-subtitle {
-          max-width: 500px;
-
-          margin:
-            .8rem auto 1.5rem;
-
-          font-size: .68rem;
-
-          letter-spacing: .22em;
-        }
-
-
-        .confirmation-postcard {
-          position: relative;
-
-          width:
-            min(100%, 700px);
-
-          margin: auto;
-
-          overflow: hidden;
-
-          clip-path:
-            polygon(
-              2% 1%,
-              98% 0,
-              100% 95%,
-              96% 100%,
-              3% 98%,
-              0 5%
-            );
-        }
-
-
-        .confirmation-postcard img {
-          width: 100%;
           display: block;
         }
 
-
-        .postcard-copy {
-          position: absolute;
-
-          left: 0;
-          right: 0;
-          bottom: 6%;
-
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-
-          color: var(--wine);
-
-          text-shadow:
-            0 1px 8px rgba(255,255,255,.8);
-        }
-
-
-        .postcard-copy span {
-          font-size: .8rem;
-          letter-spacing: .25em;
-        }
-
-
-        .postcard-copy small {
-          margin-top: .4rem;
-
-          font-size: .62rem;
+        .rsvp-form label span {
+          display: block;
+          margin-bottom: 8px;
+          color: rgba(255,255,255,.72);
+          font-family:
+            var(--font-dm-sans),
+            Arial,
+            sans-serif;
+          font-size: 8px;
           letter-spacing: .2em;
+          text-transform: uppercase;
         }
 
-
-        .confirmation-seats {
-          width:
-            min(100%, 620px);
-
-          margin:
-            1.5rem auto 0;
-
-          padding: 1rem;
-
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: .8rem;
-
-          border:
-            1px solid rgba(103,40,50,.45);
-
-          border-radius: 20px;
-
-          font-size: .72rem;
-          letter-spacing: .17em;
+        .rsvp-form input {
+          width: 100%;
+          border: none;
+          border-bottom: 1px solid rgba(255,255,255,.5);
+          outline: none;
+          background: transparent;
+          color: white;
+          padding: 12px 2px;
+          font-family:
+            var(--font-cormorant),
+            Georgia,
+            serif;
+          font-size: 22px;
         }
 
-
-        .confirmation-seats strong {
-          font-size: 2.8rem;
-          font-weight: 400;
-          letter-spacing: 0;
+        .rsvp-form input::placeholder {
+          color: rgba(255,255,255,.45);
         }
 
-
-        .confirmation-message {
-          margin:
-            1rem 0 0;
-
-          font-size: 1.15rem;
-
-          font-style: italic;
+        .rsvp-submit {
+          width: 100%;
+          margin-top: 30px;
+          border: 1px solid rgba(255,255,255,.65);
+          background: white;
+          color: #6a2731;
+          padding: 15px;
+          font-family:
+            var(--font-dm-sans),
+            Arial,
+            sans-serif;
+          font-size: 9px;
+          letter-spacing: .2em;
+          text-transform: uppercase;
         }
 
-
-        /* FOOTER */
-
-        .footer {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-
-          gap: .5rem;
-
-          padding:
-            3rem 1rem 4rem;
-
-          background: var(--paper);
-
-          color: var(--wine);
-
+        .rsvp-error {
+          margin-top: 18px;
+          color: #ffd7ca;
+          font-family:
+            var(--font-dm-sans),
+            Arial,
+            sans-serif;
+          font-size: 11px;
+          line-height: 1.5;
           text-align: center;
         }
 
-
-        .footer .script {
-          font-size: 3.2rem;
+        .confirmation {
+          padding: 50px 0 10px;
         }
 
-
-        .footer small {
-          font-size: .54rem;
-          letter-spacing: .18em;
+        .confirmation-card {
+          padding: 35px 22px;
+          background: rgba(255,255,255,.08);
+          border: 1px solid rgba(255,255,255,.22);
         }
 
-
-        .photo-fallback {
-          width: 100%;
-          height: 100%;
-          background:
-            linear-gradient(
-              135deg,
-              #e6ddce,
-              #cfc5b4
-            );
+        .confirmation-thanks {
+          margin: 0;
+          font-family:
+            "Slight Script",
+            "Brittany Signature",
+            "Allura",
+            cursive;
+          font-size: 62px;
+          line-height: .8;
         }
 
+        .confirmation-main {
+          margin: 25px 0 10px;
+          font-family:
+            var(--font-dm-sans),
+            Arial,
+            sans-serif;
+          font-size: 9px;
+          letter-spacing: .25em;
+          line-height: 1.8;
+        }
 
-        @media (min-width: 700px) {
+        .confirmation-seats {
+          margin: 22px 0 0;
+          font-family:
+            var(--font-cormorant),
+            Georgia,
+            serif;
+          font-size: 25px;
+        }
 
-          .section {
-            padding-inline: 3rem;
+        /* =========================
+           FOOTER
+        ========================= */
+
+        .footer {
+          padding: 65px 20px;
+          background: #ffffff;
+          text-align: center;
+        }
+
+        .footer-names {
+          margin: 0;
+          color: #6a2731;
+          font-family:
+            "Slight Script",
+            "Brittany Signature",
+            "Allura",
+            cursive;
+          font-size: 52px;
+          font-weight: 400;
+        }
+
+        .footer-date {
+          margin: 15px 0 0;
+          color: #777169;
+          font-family:
+            var(--font-dm-sans),
+            Arial,
+            sans-serif;
+          font-size: 8px;
+          letter-spacing: .25em;
+          text-transform: uppercase;
+        }
+
+        /* =========================
+           MOBILE
+        ========================= */
+
+        @media (max-width: 600px) {
+          .cover {
+            padding-top: 54px;
+          }
+
+          .cover-photo-area {
+            margin-top: 27px;
+            width: 100%;
+          }
+
+          .watercolor-photo {
+            max-height: 56vh;
+          }
+
+          .cover-button {
+            width: 72px;
+            height: 72px;
+          }
+
+          .save-date {
+            padding-top: 90px;
           }
 
           .cartagena-strip {
-            margin-left: -3rem;
-            margin-right: -3rem;
+            grid-template-columns: 1fr 1fr 1fr;
           }
 
-          .cover-watercolor {
-            inset:
-              8vh 12vw 10vh;
-          }
-        }
-
-
-        @media (max-width: 430px) {
-
-          .cover-watercolor {
-            inset:
-              13vh 5vw 15vh;
+          .dress-grid {
+            gap: 4px;
           }
 
-          .cartagena-strip {
-            height: 23vh;
+          .dress-person {
+            min-height: 350px;
           }
 
-          .model-brush {
-            min-height: 310px;
+          .dress-illustration {
+            transform: scale(.85);
+            transform-origin: bottom center;
+            margin-bottom: 0;
           }
 
-          .model-silhouette {
-            width: 82%;
+          .dress-person p {
+            font-size: 18px;
           }
 
-          .confirmation-seats {
-            flex-direction: column;
-            gap: .2rem;
+          .story-photos {
+            gap: 10px;
           }
         }
-
-
-        @media (prefers-reduced-motion: reduce) {
-
-          html {
-            scroll-behavior: auto;
-          }
-        }
-
       `}</style>
 
+      {/* =========================
+          PORTADA
+      ========================= */}
+
+      <section className="cover paper-section">
+        <PaperTexture />
+
+        <div className="cover-content">
+          <p className="cover-kicker">
+            NOS CASAMOS
+          </p>
+
+          <h1 className="cover-names">
+            <span>Mauro &</span>
+            <span>Yeluxa</span>
+          </h1>
+
+          <p className="cover-subtitle">
+            SAVE THE DATE
+          </p>
+        </div>
+
+        <div className="cover-photo-area">
+          <WatercolorPhoto
+            src={COUPLE_PHOTOS[0]}
+            alt="Mauro y Yeluxa"
+          />
+        </div>
+
+        <button
+          type="button"
+          className="cover-button"
+          onClick={openInvitation}
+          aria-label="Abrir invitación"
+        >
+          ···
+        </button>
+      </section>
+
+      {/* =========================
+          SAVE THE DATE
+      ========================= */}
+
+      <section
+        id="fecha"
+        className="save-date paper-section"
+      >
+        <PaperTexture />
+
+        <p className="section-kicker">
+          NUESTRA BODA
+        </p>
+
+        <h2 className="script-title">
+          Reserva
+        </h2>
+
+        <p className="save-label">
+          ESTA FECHA
+        </p>
+
+        <p className="date-day">
+          SÁBADO
+        </p>
+
+        <p className="date-number">
+          06
+        </p>
+
+        <p className="date-month">
+          MARZO · 2027
+        </p>
+
+        <p className="location-small">
+          CARTAGENA DE INDIAS
+        </p>
+
+        <Countdown />
+
+        <button
+          type="button"
+          className="calendar-button"
+          onClick={() => {
+            const start =
+              "20270306T210000Z";
+            const end =
+              "20270307T020000Z";
+
+            const url =
+              `https://calendar.google.com/calendar/render?action=TEMPLATE&text=Mauro%20%26%20Yeluxa%20-%20Nuestra%20Boda&dates=${start}%2F${end}&location=Cartagena%20de%20Indias`;
+
+            window.open(url, "_blank");
+          }}
+        >
+          AÑADIR A MI CALENDARIO
+        </button>
+
+        <div className="cartagena-strip">
+          {CARTAGENA_PHOTOS.map((photo, index) => (
+            <Photo
+              key={photo}
+              src={photo}
+              alt={`Cartagena de Indias ${index + 1}`}
+            />
+          ))}
+        </div>
+      </section>
+
+      {/* =========================
+          HISTORIA
+      ========================= */}
+
+      <section
+        id="historia"
+        className="story paper-section"
+      >
+        <PaperTexture />
+
+        <div className="story-copy">
+          <p className="section-kicker">
+            NUESTRA HISTORIA
+          </p>
+
+          <h2 className="story-title">
+            Juntos
+          </h2>
+
+          <p className="story-quote">
+            “La vida es más linda cuando la compartimos.”
+          </p>
+
+          <div className="story-photos">
+            <div className="story-photo">
+              <Photo
+                src={COUPLE_PHOTOS[1]}
+                alt="Mauro y Yeluxa"
+              />
+            </div>
+
+            <div className="story-photo">
+              <Photo
+                src={COUPLE_PHOTOS[2]}
+                alt="Mauro y Yeluxa"
+              />
+            </div>
+
+            <div className="story-photo">
+              <Photo
+                src={COUPLE_PHOTOS[0]}
+                alt="Mauro y Yeluxa"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* =========================
+          DRESS CODE
+      ========================= */}
+
+      <section
+        id="dress"
+        className="dress"
+      >
+        <div className="dress-content">
+          <p className="section-kicker">
+            DRESS CODE
+          </p>
+
+          <h2 className="dress-title">
+            Formal
+          </h2>
+
+          <div className="dress-grid">
+            <div className="dress-person">
+              <DressIllustration type="man" />
+
+              <h3>HOMBRES</h3>
+
+              <p>
+                Traje formal
+              </p>
+            </div>
+
+            <div className="dress-person">
+              <DressIllustration type="woman" />
+
+              <h3>MUJERES</h3>
+
+              <p>
+                Vestido formal largo
+              </p>
+            </div>
+          </div>
+
+          <div className="dress-note">
+            EL BLANCO ESTÁ RESERVADO
+            <br />
+            PARA LOS NOVIOS
+          </div>
+
+          <a
+            className="pinterest-button"
+            href={PINTEREST_URL}
+            target="_blank"
+            rel="noreferrer"
+            aria-label="Ver inspiración en Pinterest"
+          >
+            +
+          </a>
+        </div>
+      </section>
+
+      {/* =========================
+          RSVP
+      ========================= */}
+
+      <section
+        id="rsvp"
+        className="rsvp-section"
+      >
+        <div className="rsvp-content">
+          {!confirmedSeats ? (
+            <>
+              <p className="rsvp-kicker">
+                TU LUGAR CON NOSOTROS
+              </p>
+
+              <h2 className="rsvp-title">
+                Confirma
+                <br />
+                asistencia
+              </h2>
+
+              <p className="rsvp-text">
+                Será un honor compartir este día
+                contigo.
+              </p>
+
+              <form
+                className="rsvp-form"
+                onSubmit={submitRsvp}
+              >
+                <label>
+                  <span>
+                    NOMBRE COMPLETO
+                  </span>
+
+                  <input
+                    value={guestName}
+                    onChange={(event) =>
+                      setGuestName(
+                        event.target.value
+                      )
+                    }
+                    placeholder="Escribe tu nombre"
+                    autoComplete="name"
+                  />
+                </label>
+
+                <button
+                  type="submit"
+                  className="rsvp-submit"
+                  disabled={rsvpLoading}
+                >
+                  {rsvpLoading
+                    ? "VERIFICANDO..."
+                    : "CONFIRMAR ASISTENCIA"}
+                </button>
+              </form>
+
+              {rsvpError && (
+                <p className="rsvp-error">
+                  {rsvpError}
+                </p>
+              )}
+            </>
+          ) : (
+            <div className="confirmation">
+              <div className="confirmation-card">
+                <h2 className="confirmation-thanks">
+                  ¡Gracias!
+                </h2>
+
+                <p className="confirmation-main">
+                  TU ASISTENCIA HA SIDO
+                  <br />
+                  CONFIRMADA
+                </p>
+
+                <p className="confirmation-seats">
+                  CUPOS CONFIRMADOS:{" "}
+                  {confirmedSeats}
+                </p>
+
+                <p>
+                  Muy pronto te enviaremos
+                  más detalles.
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
+
+      <footer className="footer">
+        <p className="footer-names">
+          Mauro & Yeluxa
+        </p>
+
+        <p className="footer-date">
+          CARTAGENA DE INDIAS ·
+          06 MARZO 2027
+        </p>
+      </footer>
     </main>
   );
 }
