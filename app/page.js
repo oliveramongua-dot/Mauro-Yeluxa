@@ -1,120 +1,75 @@
-'use client';
+"use client";
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from "react";
 
-/* =========================================================
-   CONFIGURACIÓN
-========================================================= */
+const WEDDING_DATE = new Date("2027-03-06T16:00:00-05:00");
 
-const WEDDING_DATE = new Date('2027-03-06T16:00:00-05:00');
+const CARTAGENA_PHOTOS = [
+  "/cartagena-1.jpg",
+  "/cartagena-2.jpg",
+  "/cartagena-3.jpg",
+];
 
-/*
-  Cuando subamos las fotos de ustedes a /public,
-  cambia solamente estos nombres.
-*/
 const COUPLE_PHOTOS = [
-  '/foto-pareja-1.jpg',
-  '/foto-pareja-2.jpg',
-  '/foto-pareja-3.jpg',
+  "/foto-pareja-1.jpg",
+  "/foto-pareja-2.jpg",
+  "/foto-pareja-3.jpg",
 ];
-
-/*
-  Lista de invitados.
-  MÁS ADELANTE reemplazaremos estos ejemplos por la lista real.
-*/
-const GUESTS = [
-  {
-    name: 'Mauro Olivera',
-    seats: 2,
-  },
-  {
-    name: 'Juan Perez',
-    seats: 1,
-  },
-  {
-    name: 'Maria Gonzalez',
-    seats: 2,
-  },
-];
-
-/* =========================================================
-   UTILIDADES
-========================================================= */
-
-function normalizeName(value) {
-  return value
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
-/* =========================================================
-   CUENTA REGRESIVA
-========================================================= */
 
 function Countdown() {
-  const calculate = () => {
-    const difference = Math.max(
-      0,
-      WEDDING_DATE.getTime() - Date.now()
-    );
-
-    return {
-      days: Math.floor(difference / 86400000),
-      hours: Math.floor(difference / 3600000) % 24,
-      minutes: Math.floor(difference / 60000) % 60,
-      seconds: Math.floor(difference / 1000) % 60,
-    };
-  };
-
-  const [time, setTime] = useState(calculate);
+  const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setTime(calculate());
-    }, 1000);
-
-    return () => clearInterval(interval);
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
   }, []);
+
+  const time = useMemo(() => {
+    const difference = Math.max(
+      0,
+      WEDDING_DATE.getTime() - now
+    );
+
+    const total = Math.floor(difference / 1000);
+
+    return {
+      days: Math.floor(total / 86400),
+      hours: Math.floor((total % 86400) / 3600),
+      minutes: Math.floor((total % 3600) / 60),
+      seconds: total % 60,
+    };
+  }, [now]);
+
+  const items = [
+    ["days", "DÍAS"],
+    ["hours", "HORAS"],
+    ["minutes", "MINUTOS"],
+    ["seconds", "SEGUNDOS"],
+  ];
 
   return (
     <div className="countdown">
-      <div>
-        <strong>{String(time.days).padStart(2, '0')}</strong>
-        <span>DÍAS</span>
-      </div>
-
-      <div>
-        <strong>{String(time.hours).padStart(2, '0')}</strong>
-        <span>HORAS</span>
-      </div>
-
-      <div>
-        <strong>{String(time.minutes).padStart(2, '0')}</strong>
-        <span>MINUTOS</span>
-      </div>
-
-      <div>
-        <strong>{String(time.seconds).padStart(2, '0')}</strong>
-        <span>SEGUNDOS</span>
-      </div>
+      {items.map(([key, label]) => (
+        <div className="count-item" key={key}>
+          <strong>{String(time[key]).padStart(2, "0")}</strong>
+          <span>{label}</span>
+        </div>
+      ))}
     </div>
   );
 }
 
-/* =========================================================
-   FOTO CON FALLBACK
-========================================================= */
+function ImageWithFallback({
+  src,
+  alt,
+  className = "",
+}) {
+  const [error, setError] = useState(false);
 
-function CouplePhoto({ src, className = '' }) {
-  const [failed, setFailed] = useState(false);
-
-  if (failed) {
+  if (error) {
     return (
-      <div className={`couple-placeholder ${className}`}>
-        <span>M&Y</span>
+      <div className={`image-fallback ${className}`}>
+        <span>M &amp; Y</span>
       </div>
     );
   }
@@ -122,81 +77,122 @@ function CouplePhoto({ src, className = '' }) {
   return (
     <img
       src={src}
-      alt="Mauro y Yeluxa"
-      className={`couple-photo ${className}`}
-      onError={() => setFailed(true)}
+      alt={alt}
+      className={className}
+      onError={() => setError(true)}
     />
   );
 }
 
-/* =========================================================
-   APP
-========================================================= */
+function WatercolorTexture() {
+  return (
+    <>
+      <div className="paper-texture" />
+      <div className="watercolor watercolor-one" />
+      <div className="watercolor watercolor-two" />
+      <div className="watercolor watercolor-three" />
+    </>
+  );
+}
 
 export default function Home() {
-  const [slide, setSlide] = useState(0);
+  const [started, setStarted] = useState(false);
 
-  const [guestName, setGuestName] = useState('');
-  const [guestError, setGuestError] = useState('');
-  const [guest, setGuest] = useState(null);
+  const [name, setName] = useState("");
+  const [rsvpStatus, setRsvpStatus] = useState("idle");
+  const [rsvpError, setRsvpError] = useState("");
+  const [confirmedSeats, setConfirmedSeats] = useState(null);
 
-  const normalizedInput = useMemo(
-    () => normalizeName(guestName),
-    [guestName]
-  );
+  const calendarUrl =
+    "https://calendar.google.com/calendar/render" +
+    "?action=TEMPLATE" +
+    "&text=Mauro%20%26%20Yeluxa%20-%20Nuestra%20Boda" +
+    "&dates=20270306T160000/20270307T000000" +
+    "&details=Nuestra%20boda%20en%20Cartagena%20de%20Indias." +
+    "&location=Cartagena%20de%20Indias%2C%20Colombia";
 
-  const goToSlide = (number) => {
-    setSlide(number);
+  function enterInvitation() {
+    setStarted(true);
 
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth',
-    });
-  };
+    setTimeout(() => {
+      document
+        .getElementById("save-the-date")
+        ?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+    }, 100);
+  }
 
-  const validateGuest = () => {
-    setGuestError('');
+  async function submitRsvp(event) {
+    event.preventDefault();
 
-    if (!normalizedInput) {
-      setGuestError('Escribe tu nombre completo.');
+    const cleanName = name.trim();
+
+    if (!cleanName) {
+      setRsvpError("Escribe tu nombre completo.");
       return;
     }
 
-    const found = GUESTS.find(
-      (item) => normalizeName(item.name) === normalizedInput
-    );
+    setRsvpStatus("loading");
+    setRsvpError("");
 
-    if (!found) {
-      setGuestError(
-        'No encontramos este nombre en nuestra lista de invitados. Verifica cómo lo escribiste.'
+    try {
+      const response = await fetch("/api/rsvp", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: cleanName,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.valid) {
+        setRsvpStatus("error");
+        setRsvpError(
+          "No encontramos ese nombre en nuestra lista. Revisa que esté escrito completo."
+        );
+        return;
+      }
+
+      setConfirmedSeats(data.seats);
+      setRsvpStatus("success");
+
+      setTimeout(() => {
+        document
+          .getElementById("confirmation")
+          ?.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+      }, 150);
+    } catch {
+      setRsvpStatus("error");
+      setRsvpError(
+        "No pudimos procesar la confirmación. Inténtalo nuevamente."
       );
-      setGuest(null);
-      return;
     }
-
-    setGuest(found);
-  };
-
-  const confirmAttendance = () => {
-    if (!guest) return;
-
-    goToSlide(6);
-  };
+  }
 
   return (
-    <main className="wedding">
+    <main className="site">
 
       {/* =====================================================
-          SLIDE 1 — PORTADA
-      ===================================================== */}
+          PORTADA
+      ====================================================== */}
 
-      {slide === 0 && (
-        <section className="slide cover-slide">
+      {!started && (
+        <section className="cover">
 
-          <div className="cover-background">
-            <CouplePhoto
+          <WatercolorTexture />
+
+          <div className="cover-image">
+            <ImageWithFallback
               src={COUPLE_PHOTOS[0]}
-              className="cover-main-photo"
+              alt="Mauro y Yeluxa"
             />
 
             <div className="cover-overlay" />
@@ -204,186 +200,219 @@ export default function Home() {
 
           <div className="cover-content">
 
-            <p className="cover-small">
-              NOS CASAMOS
-            </p>
-
-            <h1>
-              Mauro <em>&</em> Yeluxa
-            </h1>
-
-            <div className="cover-line" />
-
-            <p className="save-title">
-              SAVE THE DATE
-            </p>
-
-          </div>
-
-          <button
-            className="follow-button"
-            onClick={() => goToSlide(1)}
-          >
-            síguenos..
-          </button>
-
-        </section>
-      )}
-
-      {/* =====================================================
-          SLIDE 2 — SAVE THE DATE
-      ===================================================== */}
-
-      {slide === 1 && (
-        <section className="slide date-slide">
-
-          <div className="top-label">
-            SAVE THE DATE
-          </div>
-
-          <div className="date-content">
-
-            <p className="eyebrow">
+            <div className="cover-small">
               NUESTRA BODA
-            </p>
-
-            <h2>
-              Reserva esta fecha
-            </h2>
-
-            <div className="calendar-date">
-              <span>SÁBADO</span>
-              <strong>06</strong>
-              <span>MARZO · 2027</span>
             </div>
 
-            <p className="location">
-              CARTAGENA DE INDIAS
-            </p>
+            <h1 className="script cover-names">
+              Mauro &amp; Yeluxa
+            </h1>
 
-            <Countdown />
+            <div className="cover-main">
+              NOS CASAMOS
+            </div>
+
+            <div className="cover-save">
+              SAVE THE DATE
+            </div>
 
             <button
-              className="outline-button"
-              onClick={() => {
-                const calendarUrl =
-                  'https://calendar.google.com/calendar/render?action=TEMPLATE&text=Mauro%20%26%20Yeluxa%20-%20Nuestra%20Boda&dates=20270306T160000/20270306T235900&details=Nos%20vemos%20en%20Cartagena%20de%20Indias.&location=Cartagena%20de%20Indias';
-
-                window.open(
-                  calendarUrl,
-                  '_blank'
-                );
-              }}
+              type="button"
+              className="cover-enter"
+              onClick={enterInvitation}
+              aria-label="Entrar a la invitación"
             >
-              + AÑADIR A MI CALENDARIO
+              …
             </button>
 
           </div>
-
-          <div className="cartagena-strip">
-
-            <div className="cartagena-photo photo-one">
-              <div />
-            </div>
-
-            <div className="cartagena-photo photo-two">
-              <div />
-            </div>
-
-            <div className="cartagena-photo photo-three">
-              <div />
-            </div>
-
-          </div>
-
-          <button
-            className="next-arrow"
-            onClick={() => goToSlide(2)}
-            aria-label="Continuar"
-          >
-            ↓
-          </button>
-
         </section>
       )}
 
       {/* =====================================================
-          SLIDE 3 — NUESTRA HISTORIA
-      ===================================================== */}
+          INVITACIÓN
+      ====================================================== */}
 
-      {slide === 2 && (
-        <section className="slide story-slide">
+      <div
+        className={`invitation ${
+          started ? "invitation-visible" : ""
+        }`}
+      >
 
-          <div className="story-header">
-            <p className="eyebrow">
-              NUESTRA HISTORIA
-            </p>
+        {/* ===================================================
+            SLIDE 2 — RESERVA ESTA FECHA
+        ==================================================== */}
 
-            <h2>
-              Un nuevo capítulo
+        <section
+          id="save-the-date"
+          className="section save-section"
+        >
+
+          <WatercolorTexture />
+
+          <div className="section-content">
+
+            <div className="eyebrow">
+              NUESTRA BODA
+            </div>
+
+            {/* Se conserva exactamente.
+                Solo se eliminó SAVE THE DATE. */}
+
+            <h2 className="display-title">
+              Reserva esta fecha
             </h2>
 
-            <p className="story-text">
-              Después de tantos momentos
-              compartidos, viajes, sueños y
-              aventuras, llegó el momento de
-              comenzar un nuevo capítulo juntos.
-            </p>
+            <div className="date-block">
+
+              <div className="date-day">
+                SÁBADO
+              </div>
+
+              <div className="date-number">
+                06
+              </div>
+
+              <div className="date-month">
+                MARZO · 2027
+              </div>
+
+              <div className="date-place">
+                CARTAGENA DE INDIAS
+              </div>
+
+            </div>
+
+            <Countdown />
+
+            <a
+              href={calendarUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="calendar-button"
+            >
+              <span>+</span>
+              AÑADIR A MI CALENDARIO
+            </a>
+
+            <div
+              className="cartagena-strip"
+              aria-label="Cartagena de Indias"
+            >
+
+              {CARTAGENA_PHOTOS.map(
+                (photo, index) => (
+                  <div
+                    className="cartagena-photo"
+                    key={photo}
+                  >
+                    <ImageWithFallback
+                      src={photo}
+                      alt={`Cartagena de Indias en acuarela ${
+                        index + 1
+                      }`}
+                    />
+                  </div>
+                )
+              )}
+
+            </div>
+
           </div>
-
-          <div className="story-photos">
-
-            <CouplePhoto
-              src={COUPLE_PHOTOS[1]}
-              className="story-photo large"
-            />
-
-            <CouplePhoto
-              src={COUPLE_PHOTOS[2]}
-              className="story-photo small"
-            />
-
-          </div>
-
-          <p className="story-quote">
-            “La vida es más linda cuando
-            la compartimos.”
-          </p>
-
-          <button
-            className="next-arrow dark"
-            onClick={() => goToSlide(3)}
-            aria-label="Continuar"
-          >
-            ↓
-          </button>
-
         </section>
-      )}
 
-      {/* =====================================================
-          SLIDE 4 — DRESS CODE
-      ===================================================== */}
+        {/* ===================================================
+            SLIDE 3 — NUESTRA HISTORIA
+        ==================================================== */}
 
-      {slide === 3 && (
-        <section className="slide dress-slide">
+        <section className="section story-section">
 
-          <div className="dress-content">
+          <WatercolorTexture />
 
-            <p className="eyebrow light">
-              DRESS CODE
+          <div className="section-content story-content">
+
+            <div className="eyebrow">
+              NUESTRA HISTORIA
+            </div>
+
+            <h2 className="script story-title">
+              La vida es más linda
+              <br />
+              cuando la compartimos.
+            </h2>
+
+            <div className="story-gallery">
+
+              <div className="story-photo story-photo-main">
+                <ImageWithFallback
+                  src={COUPLE_PHOTOS[1]}
+                  alt="Mauro y Yeluxa"
+                />
+              </div>
+
+              <div className="story-photo story-photo-small">
+                <ImageWithFallback
+                  src={COUPLE_PHOTOS[2]}
+                  alt="Mauro y Yeluxa"
+                />
+              </div>
+
+              <span className="botanical botanical-one">
+                ❧
+              </span>
+
+              <span className="botanical botanical-two">
+                ❧
+              </span>
+
+            </div>
+
+            <p className="story-text">
+              Dos caminos que se encontraron, una
+              historia que seguimos escribiendo y un
+              nuevo capítulo que queremos celebrar junto
+              a quienes hacen parte de nuestra vida.
             </p>
 
-            <h2>
+          </div>
+        </section>
+
+        {/* ===================================================
+            SLIDE 4 — DRESS CODE
+        ==================================================== */}
+
+        <section className="section dress-section">
+
+          <WatercolorTexture />
+
+          <div className="section-content dress-content">
+
+            <div className="eyebrow light">
+              DRESS CODE
+            </div>
+
+            <h2 className="display-title light">
               Formal
             </h2>
 
-            <div className="dress-grid">
+            <div className="dress-art">
 
-              <div className="dress-column">
-                <span className="dress-symbol">
-                  ♢
-                </span>
+              <ImageWithFallback
+                src="/dress-code.png"
+                alt="Dress code formal en acuarela"
+              />
+
+            </div>
+
+            <div className="dress-options">
+
+              {/* HOMBRES */}
+
+              <div className="dress-option">
+
+                <div className="dress-diamond">
+                  ◇
+                </div>
 
                 <h3>
                   Hombres
@@ -391,69 +420,84 @@ export default function Home() {
 
                 <p>
                   Traje formal
-                  <br />
-                  Preferiblemente oscuro
                 </p>
+
+                <button
+                  type="button"
+                  className="plus-button"
+                  aria-label="Ideas para hombres"
+                >
+                  +
+                </button>
+
               </div>
 
-              <div className="dress-column">
-                <span className="dress-symbol">
-                  ♢
-                </span>
+              {/* MUJERES */}
+
+              <div className="dress-option">
+
+                <div className="dress-diamond">
+                  ◇
+                </div>
 
                 <h3>
                   Mujeres
                 </h3>
 
                 <p>
-                  Vestido formal
+                  Vestido formal largo
                 </p>
+
+                <button
+                  type="button"
+                  className="plus-button"
+                  aria-label="Ideas para mujeres"
+                >
+                  +
+                </button>
+
               </div>
 
             </div>
 
-            <div className="white-note">
+            <div className="dress-note">
               EL BLANCO ESTÁ RESERVADO
               <br />
               PARA LOS NOVIOS
             </div>
 
           </div>
-
-          <button
-            className="next-arrow light-arrow"
-            onClick={() => goToSlide(4)}
-            aria-label="Continuar"
-          >
-            ↓
-          </button>
-
         </section>
-      )}
 
-      {/* =====================================================
-          SLIDE 5 — CONFIRMA ASISTENCIA
-      ===================================================== */}
+        {/* ===================================================
+            SLIDE 5 — RSVP
+        ==================================================== */}
 
-      {slide === 4 && (
-        <section className="slide rsvp-slide">
+        <section className="section rsvp-section">
 
-          <div className="rsvp-content">
+          <WatercolorTexture />
 
-            <p className="eyebrow burgundy">
-              CONFIRMA ASISTENCIA
-            </p>
+          <div className="section-content rsvp-content">
 
-            <h2>
-              Queremos contar contigo
+            <div className="eyebrow">
+              RSVP
+            </div>
+
+            <h2 className="display-title">
+              Confirma asistencia
             </h2>
 
-            <p className="rsvp-intro">
-              Escribe tu nombre completo para
-              confirmar tu invitación.
+            <p className="rsvp-text">
+              Queremos celebrar este día contigo.
+              <br />
+              Escribe tu nombre tal como aparece
+              en tu invitación.
             </p>
 
-            <div className="name-form">
+            <form
+              className="rsvp-form"
+              onSubmit={submitRsvp}
+            >
 
               <label htmlFor="guest-name">
                 NOMBRE COMPLETO
@@ -462,151 +506,142 @@ export default function Home() {
               <input
                 id="guest-name"
                 type="text"
-                value={guestName}
-                onChange={(e) => {
-                  setGuestName(e.target.value);
-                  setGuestError('');
-                  setGuest(null);
+                value={name}
+                onChange={(event) => {
+                  setName(event.target.value);
+                  setRsvpStatus("idle");
+                  setRsvpError("");
                 }}
-                placeholder="Escribe tu nombre"
+                placeholder="Tu nombre"
                 autoComplete="name"
               />
 
-              {guestError && (
-                <p className="guest-error">
-                  {guestError}
+              {rsvpError && (
+                <p className="rsvp-error">
+                  {rsvpError}
                 </p>
               )}
 
-              {!guest && (
-                <button
-                  className="primary-button"
-                  onClick={validateGuest}
-                >
-                  CONTINUAR
-                </button>
-              )}
+              <button
+                type="submit"
+                className="confirm-button"
+                disabled={rsvpStatus === "loading"}
+              >
+                {rsvpStatus === "loading"
+                  ? "VERIFICANDO…"
+                  : "CONFIRMAR"}
+              </button>
 
-              {guest && (
-                <div className="guest-found">
+            </form>
 
-                  <div className="check">
-                    ✓
-                  </div>
+          </div>
+        </section>
 
-                  <p>
-                    Invitación encontrada
-                  </p>
+        {/* ===================================================
+            SLIDE OCULTO — CONFIRMACIÓN
+        ==================================================== */}
 
-                  <strong>
-                    {guest.name}
-                  </strong>
+        {rsvpStatus === "success" && (
+          <section
+            id="confirmation"
+            className="section confirmation-section"
+          >
 
-                  <button
-                    className="primary-button"
-                    onClick={confirmAttendance}
-                  >
-                    ENVIAR CONFIRMACIÓN
-                  </button>
+            <WatercolorTexture />
 
-                </div>
-              )}
+            <div className="section-content confirmation-content">
+
+              <div className="eyebrow">
+                CONFIRMACIÓN RECIBIDA
+              </div>
+
+              <div className="confirmation-monogram">
+                M &amp; Y
+              </div>
+
+              <h2 className="script confirmation-title">
+                CUPOS CONFIRMADOS:{" "}
+                {confirmedSeats}
+              </h2>
+
+              <p className="confirmation-text">
+                Muy pronto te enviaremos más detalles.
+              </p>
 
             </div>
+          </section>
+        )}
 
+        {/* ===================================================
+            FOOTER
+        ==================================================== */}
+
+        <footer className="footer">
+
+          <div className="script footer-names">
+            Mauro &amp; Yeluxa
           </div>
 
-        </section>
-      )}
+          <small>
+            CARTAGENA DE INDIAS · 06.03.2027
+          </small>
 
-      {/* =====================================================
-          SLIDE 6 — OCULTO HASTA CONFIRMACIÓN
-      ===================================================== */}
+        </footer>
 
-      {slide === 6 && guest && (
-        <section className="slide confirmed-slide">
-
-          <div className="confirmed-content">
-
-            <span className="confirmed-heart">
-              ♥
-            </span>
-
-            <p className="eyebrow">
-              CONFIRMACIÓN RECIBIDA
-            </p>
-
-            <h2>
-              Nos vemos en Cartagena
-            </h2>
-
-            <div className="confirmed-line" />
-
-            <p className="confirmed-seats">
-              CUPOS CONFIRMADOS
-            </p>
-
-            <strong className="seat-number">
-              {guest.seats}
-            </strong>
-
-            <p className="confirmed-message">
-              Muy pronto te enviaremos
-              más detalles.
-            </p>
-
-          </div>
-
-        </section>
-      )}
-
-      {/* =====================================================
-          NAVEGACIÓN LATERAL
-      ===================================================== */}
-
-      {slide > 0 && slide < 6 && (
-        <button
-          className="back-button"
-          onClick={() =>
-            goToSlide(slide - 1)
-          }
-          aria-label="Regresar"
-        >
-          ←
-        </button>
-      )}
+      </div>
 
       {/* =====================================================
           ESTILOS
-      ===================================================== */}
+      ====================================================== */}
 
-      <style>{`
+      <style jsx global>{`
 
         :root {
-          --ivory: #f5f1e8;
-          --paper: #eee8dc;
+          --paper: #f5f1e8;
+          --paper-light: #faf7f0;
+
           --olive: #59634a;
-          --deep: #3e4734;
+          --olive-dark: #46503c;
+
           --burgundy: #572932;
-          --ink: #27261f;
-          --muted: #777267;
-          --line: rgba(62,71,52,.2);
+          --burgundy-soft: #6d3a42;
+
+          --ink: #2d2a25;
+          --muted: #716a60;
+
+          --white: #f8f5ed;
+
+          /*
+            Combinación tipográfica:
+            - serif recta para información
+            - script para nombres y frases protagonistas
+          */
+
+          --serif:
+            "Cormorant Garamond",
+            "Times New Roman",
+            serif;
+
+          --script:
+            "Snell Roundhand",
+            "Brittany Signature",
+            "Brush Script MT",
+            cursive;
         }
 
         * {
           box-sizing: border-box;
         }
 
-        html,
-        body {
-          margin: 0;
-          padding: 0;
-          background: var(--ivory);
-          color: var(--ink);
+        html {
+          scroll-behavior: smooth;
         }
 
         body {
-          overflow-x: hidden;
+          margin: 0;
+          background: var(--paper);
+          color: var(--ink);
+          font-family: var(--serif);
         }
 
         button,
@@ -618,40 +653,138 @@ export default function Home() {
           -webkit-tap-highlight-color: transparent;
         }
 
-        .wedding {
-          min-height: 100svh;
-          background: var(--ivory);
+        .site {
+          min-height: 100vh;
+          overflow-x: hidden;
+          background: var(--paper);
         }
 
-        .slide {
-          min-height: 100svh;
-          width: 100%;
-          position: relative;
-          overflow: hidden;
-        }
+        /* ===================================================
+           TEXTURA DE PAPEL
+        ==================================================== */
 
-        /* =====================================================
-           PORTADA
-        ===================================================== */
-
-        .cover-slide {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: white;
-          background: var(--deep);
-        }
-
-        .cover-background {
+        .paper-texture {
           position: absolute;
           inset: 0;
+          pointer-events: none;
+          z-index: 0;
+          opacity: 0.48;
+
+          background-image:
+            radial-gradient(
+              circle at 15% 20%,
+              rgba(82, 68, 48, 0.08) 0 1px,
+              transparent 1.5px
+            ),
+            radial-gradient(
+              circle at 78% 72%,
+              rgba(82, 68, 48, 0.06) 0 1px,
+              transparent 1.5px
+            ),
+            radial-gradient(
+              circle at 45% 50%,
+              rgba(82, 68, 48, 0.035) 0 1px,
+              transparent 1.5px
+            );
+
+          background-size:
+            19px 19px,
+            23px 23px,
+            31px 31px;
+
+          mix-blend-mode: multiply;
         }
 
-        .cover-main-photo {
+        .watercolor {
+          position: absolute;
+          pointer-events: none;
+          z-index: 0;
+          filter: blur(2px);
+          opacity: 0.32;
+          border-radius: 50%;
+        }
+
+        .watercolor-one {
+          width: 270px;
+          height: 170px;
+          left: -120px;
+          top: 12%;
+          background:
+            radial-gradient(
+              ellipse,
+              rgba(89, 99, 74, 0.3),
+              transparent 70%
+            );
+          transform: rotate(-25deg);
+        }
+
+        .watercolor-two {
+          width: 320px;
+          height: 180px;
+          right: -150px;
+          top: 55%;
+          background:
+            radial-gradient(
+              ellipse,
+              rgba(87, 41, 50, 0.22),
+              transparent 70%
+            );
+          transform: rotate(30deg);
+        }
+
+        .watercolor-three {
+          width: 260px;
+          height: 150px;
+          left: 35%;
+          bottom: -100px;
+          background:
+            radial-gradient(
+              ellipse,
+              rgba(196, 137, 83, 0.22),
+              transparent 70%
+            );
+        }
+
+        /* ===================================================
+           PORTADA
+        ==================================================== */
+
+        .cover {
+          position: fixed;
+          inset: 0;
+          z-index: 100;
+          min-height: 100svh;
+          overflow: hidden;
+
+          display: grid;
+          place-items: center;
+
+          background: var(--paper);
+          animation: coverIn 0.8s ease both;
+        }
+
+        .cover-image {
+          position: absolute;
+          inset: 6vh 5vw 11vh;
+          overflow: hidden;
+
+          clip-path: polygon(
+            3% 1%,
+            97% 0,
+            100% 5%,
+            98% 96%,
+            94% 100%,
+            3% 98%,
+            0 93%,
+            2% 5%
+          );
+        }
+
+        .cover-image img,
+        .cover-image .image-fallback {
           width: 100%;
           height: 100%;
           object-fit: cover;
-          object-position: center;
           display: block;
         }
 
@@ -661,922 +794,889 @@ export default function Home() {
 
           background:
             linear-gradient(
-              to bottom,
-              rgba(20,28,18,.18),
-              rgba(20,28,18,.42)
+              180deg,
+              rgba(245, 241, 232, 0.25),
+              rgba(87, 41, 50, 0.12) 50%,
+              rgba(245, 241, 232, 0.55)
             );
+
+          mix-blend-mode: multiply;
         }
 
         .cover-content {
           position: relative;
-          z-index: 2;
-          width: 90%;
-          max-width: 700px;
+          z-index: 3;
+
+          width: min(90vw, 650px);
+
           text-align: center;
+
+          color: var(--burgundy);
+
+          text-shadow:
+            0 1px 20px
+            rgba(245, 241, 232, 0.8);
         }
 
         .cover-small {
-          margin: 0 0 20px;
-
-          font-family:
-            var(--font-cormorant),
-            Georgia,
-            serif;
-
-          font-size: 18px;
-          letter-spacing: .25em;
+          font-size: 0.72rem;
+          letter-spacing: 0.35em;
         }
 
-        .cover-content h1 {
-          margin: 0;
+        .cover-names {
+          margin: 0.5rem 0 0;
 
-          font-family:
-            var(--font-cormorant),
-            Georgia,
-            serif;
+          font-size:
+            clamp(4rem, 16vw, 8rem);
 
-          font-size: clamp(
-            54px,
-            14vw,
-            105px
-          );
-
+          line-height: 0.85;
           font-weight: 400;
-          line-height: .9;
         }
 
-        .cover-content h1 em {
-          font-style: italic;
+        .cover-main {
+          margin-top: 1.4rem;
+
+          font-size:
+            clamp(1.8rem, 7vw, 3.8rem);
+
+          letter-spacing: 0.1em;
         }
 
-        .cover-line {
-          width: 65px;
-          height: 1px;
-          margin: 30px auto 20px;
+        .cover-save {
+          margin-top: 0.8rem;
 
-          background: rgba(255,255,255,.7);
+          font-size: 0.7rem;
+          letter-spacing: 0.3em;
         }
 
-        .save-title {
-          margin: 0;
+        .cover-enter {
+          width: 72px;
+          height: 72px;
 
-          font-family:
-            var(--font-cormorant),
-            Georgia,
-            serif;
+          margin: 7vh auto 0;
 
-          font-size: 19px;
-          letter-spacing: .3em;
-        }
+          display: grid;
+          place-items: center;
 
-        .follow-button {
-          position: absolute;
-          z-index: 5;
-          bottom: 7vh;
-          left: 50%;
-          transform: translateX(-50%);
+          border: 1px solid
+            rgba(87, 41, 50, 0.35);
 
-          border: 0;
-          padding: 8px 14px;
+          border-radius: 50%;
 
-          background: transparent;
-          color: white;
+          background:
+            rgba(245, 241, 232, 0.75);
 
-          font-family:
-            var(--font-parfumerie),
-            cursive;
+          color: var(--burgundy);
 
-          font-size: 22px;
+          font-size: 2.2rem;
+          line-height: 1;
+
           cursor: pointer;
+
+          transition:
+            transform 0.25s ease,
+            background 0.25s ease;
         }
 
-        .follow-button::after {
-          content: '';
-          display: block;
-
-          width: 100%;
-          height: 1px;
-          margin-top: 3px;
-
-          background: rgba(255,255,255,.65);
+        .cover-enter:active {
+          transform: scale(0.92);
         }
 
-        /* =====================================================
-           SAVE THE DATE
-        ===================================================== */
+        /* ===================================================
+           INVITACIÓN
+        ==================================================== */
 
-        .date-slide {
+        .invitation {
+          min-height: 100vh;
+
+          opacity: 0;
+          pointer-events: none;
+
+          transition:
+            opacity 0.5s ease;
+        }
+
+        .invitation-visible {
+          opacity: 1;
+          pointer-events: auto;
+        }
+
+        .section {
+          position: relative;
+
           min-height: 100svh;
+
+          overflow: hidden;
+
           display: flex;
-          flex-direction: column;
           align-items: center;
-          background: var(--ivory);
+          justify-content: center;
+
+          padding:
+            6rem
+            1.35rem;
+        }
+
+        .section-content {
+          position: relative;
+          z-index: 2;
+
+          width: min(100%, 760px);
+
           text-align: center;
         }
 
-        .top-label {
-          padding-top: 8vh;
+        /* ===================================================
+           TIPOGRAFÍA
+        ==================================================== */
 
-          font-family:
-            var(--font-cormorant),
-            Georgia,
-            serif;
-
-          font-size: 15px;
-          letter-spacing: .28em;
-          color: var(--burgundy);
-        }
-
-        .date-content {
-          width: min(90%, 650px);
-          padding: 8vh 0 5vh;
+        .script {
+          font-family: var(--script);
+          font-weight: 400;
         }
 
         .eyebrow {
-          margin: 0 0 15px;
+          font-family: var(--serif);
 
-          font-family:
-            var(--font-cormorant),
-            Georgia,
-            serif;
+          font-size: 0.72rem;
 
-          font-size: 16px;
-          letter-spacing: .2em;
+          letter-spacing: 0.34em;
+
           text-transform: uppercase;
+
           color: var(--burgundy);
         }
 
-        .date-content h2,
-        .story-header h2,
-        .rsvp-content h2,
-        .confirmed-content h2 {
-          margin: 0;
+        .display-title {
+          margin:
+            0.9rem
+            0
+            2.5rem;
 
-          font-family:
-            var(--font-cormorant),
-            Georgia,
-            serif;
+          font-family: var(--serif);
+
+          font-size:
+            clamp(2.8rem, 10vw, 5.5rem);
+
+          line-height: 0.95;
 
           font-weight: 400;
-          font-size: clamp(
-            42px,
-            10vw,
-            72px
-          );
-
-          line-height: .95;
-        }
-
-        .calendar-date {
-          margin: 38px auto 18px;
-
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-        }
-
-        .calendar-date span {
-          font-family:
-            var(--font-cormorant),
-            Georgia,
-            serif;
-
-          font-size: 16px;
-          letter-spacing: .25em;
-        }
-
-        .calendar-date strong {
-          margin: 5px 0;
-
-          font-family:
-            var(--font-cormorant),
-            Georgia,
-            serif;
-
-          font-size: 92px;
-          line-height: .8;
-          font-weight: 400;
-
-          color: var(--burgundy);
-        }
-
-        .location {
-          margin: 0;
-
-          font-family:
-            var(--font-cormorant),
-            Georgia,
-            serif;
-
-          font-size: 17px;
-          letter-spacing: .25em;
-        }
-
-        .countdown {
-          display: flex;
-          justify-content: center;
-          gap: clamp(
-            18px,
-            6vw,
-            50px
-          );
-
-          margin: 35px 0;
-        }
-
-        .countdown div {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-        }
-
-        .countdown strong {
-          font-family:
-            var(--font-cormorant),
-            Georgia,
-            serif;
-
-          font-size: 31px;
-          font-weight: 400;
-
-          color: var(--deep);
-        }
-
-        .countdown span {
-          margin-top: 4px;
-
-          font-family:
-            var(--font-cormorant),
-            Georgia,
-            serif;
-
-          font-size: 8px;
-          letter-spacing: .16em;
-        }
-
-        .outline-button {
-          border: 1px solid var(--burgundy);
-          background: transparent;
-          color: var(--burgundy);
-
-          padding: 13px 20px;
-
-          font-family:
-            var(--font-cormorant),
-            Georgia,
-            serif;
-
-          font-size: 13px;
-          letter-spacing: .13em;
-
-          cursor: pointer;
-        }
-
-        .cartagena-strip {
-          width: 100%;
-          height: 30vh;
-          min-height: 190px;
-
-          display: grid;
-          grid-template-columns:
-            1fr 1.25fr 1fr;
-
-          gap: 4px;
-
-          margin-top: auto;
-        }
-
-        .cartagena-photo {
-          position: relative;
-          overflow: hidden;
-        }
-
-        /*
-          Estas tres áreas quedan preparadas para las
-          fotos reales de Cartagena.
-        */
-
-        .cartagena-photo::before {
-          content: '';
-          position: absolute;
-          inset: 0;
-        }
-
-        .photo-one::before {
-          background:
-            linear-gradient(
-              145deg,
-              #817761,
-              #c5b59a
-            );
-        }
-
-        .photo-two::before {
-          background:
-            linear-gradient(
-              145deg,
-              #a58a6d,
-              #dfcdb1
-            );
-        }
-
-        .photo-three::before {
-          background:
-            linear-gradient(
-              145deg,
-              #59634a,
-              #b6a88f
-            );
-        }
-
-        /* =====================================================
-           HISTORIA
-        ===================================================== */
-
-        .story-slide {
-          background: var(--paper);
-          padding: 10vh 7vw;
-          text-align: center;
-        }
-
-        .story-header {
-          max-width: 680px;
-          margin: 0 auto;
-        }
-
-        .story-text {
-          max-width: 560px;
-          margin: 25px auto 0;
-
-          font-family:
-            var(--font-dm-sans),
-            sans-serif;
-
-          font-size: 14px;
-          line-height: 1.8;
-          color: var(--muted);
-        }
-
-        .story-photos {
-          max-width: 700px;
-          margin: 55px auto 45px;
-
-          display: grid;
-          grid-template-columns: 1.2fr .8fr;
-          gap: 14px;
-
-          align-items: end;
-        }
-
-        .couple-photo {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-          display: block;
-        }
-
-        .story-photo.large {
-          height: 420px;
-        }
-
-        .story-photo.small {
-          height: 330px;
-        }
-
-        .couple-placeholder {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-
-          background:
-            linear-gradient(
-              145deg,
-              #c6bca9,
-              #8c8779
-            );
-
-          color: rgba(255,255,255,.9);
-        }
-
-        .couple-placeholder span {
-          font-family:
-            var(--font-cormorant),
-            Georgia,
-            serif;
-
-          font-size: 55px;
-          font-style: italic;
-        }
-
-        .story-quote {
-          margin: 0;
-
-          font-family:
-            var(--font-parfumerie),
-            cursive;
-
-          font-size: 28px;
-          color: var(--burgundy);
-        }
-
-        /* =====================================================
-           DRESS CODE
-        ===================================================== */
-
-        .dress-slide {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-
-          background: var(--olive);
-          color: var(--ivory);
-
-          text-align: center;
-        }
-
-        .dress-content {
-          width: min(90%, 700px);
-        }
-
-        .eyebrow.light {
-          color: var(--ivory);
-        }
-
-        .dress-content h2 {
-          margin: 0;
-
-          font-family:
-            var(--font-cormorant),
-            Georgia,
-            serif;
-
-          font-size: clamp(
-            55px,
-            13vw,
-            90px
-          );
-
-          font-weight: 400;
-        }
-
-        .dress-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 50px;
-
-          margin: 60px 0;
-        }
-
-        .dress-symbol {
-          font-size: 28px;
-        }
-
-        .dress-column h3 {
-          margin: 10px 0;
-
-          font-family:
-            var(--font-cormorant),
-            Georgia,
-            serif;
-
-          font-size: 34px;
-          font-weight: 400;
-        }
-
-        .dress-column p {
-          margin: 0;
-
-          font-family:
-            var(--font-dm-sans),
-            sans-serif;
-
-          font-size: 12px;
-          line-height: 1.8;
-
-          color: rgba(245,241,232,.8);
-        }
-
-        .white-note {
-          padding: 18px;
-
-          border-top: 1px solid
-            rgba(245,241,232,.3);
-
-          border-bottom: 1px solid
-            rgba(245,241,232,.3);
-
-          font-family:
-            var(--font-dm-sans),
-            sans-serif;
-
-          font-size: 9px;
-          line-height: 1.8;
-          letter-spacing: .2em;
-        }
-
-        /* =====================================================
-           RSVP
-        ===================================================== */
-
-        .rsvp-slide {
-          background: var(--ivory);
-
-          display: flex;
-          align-items: center;
-          justify-content: center;
-
-          text-align: center;
-          padding: 10vh 24px;
-        }
-
-        .rsvp-content {
-          width: min(100%, 560px);
-        }
-
-        .burgundy {
-          color: var(--burgundy);
-        }
-
-        .rsvp-intro {
-          margin: 28px auto 40px;
-          max-width: 440px;
-
-          font-family:
-            var(--font-dm-sans),
-            sans-serif;
-
-          font-size: 14px;
-          line-height: 1.8;
-
-          color: var(--muted);
-        }
-
-        .name-form {
-          text-align: left;
-        }
-
-        .name-form label {
-          display: block;
-
-          margin-bottom: 8px;
-
-          font-family:
-            var(--font-cormorant),
-            Georgia,
-            serif;
-
-          font-size: 13px;
-          letter-spacing: .14em;
-          color: var(--burgundy);
-        }
-
-        .name-form input {
-          width: 100%;
-
-          border: 0;
-          border-bottom: 1px solid
-            rgba(62,71,52,.35);
-
-          background: transparent;
-
-          padding: 14px 2px;
-
-          outline: none;
-
-          font-family:
-            var(--font-cormorant),
-            Georgia,
-            serif;
-
-          font-size: 21px;
 
           color: var(--ink);
         }
 
-        .name-form input:focus {
-          border-color: var(--burgundy);
+        /* ===================================================
+           SAVE THE DATE
+        ==================================================== */
+
+        .save-section {
+          background:
+            linear-gradient(
+              150deg,
+              rgba(89, 99, 74, 0.035),
+              transparent 45%,
+              rgba(87, 41, 50, 0.04)
+            ),
+            var(--paper);
         }
 
-        .primary-button {
+        .date-block {
+          margin-top: 2rem;
+        }
+
+        .date-day {
+          font-size: 0.9rem;
+          letter-spacing: 0.34em;
+        }
+
+        .date-number {
+          margin: 0.15rem 0;
+
+          color: var(--burgundy);
+
+          font-size:
+            clamp(6rem, 27vw, 11rem);
+
+          line-height: 0.78;
+
+          letter-spacing: -0.05em;
+        }
+
+        .date-month {
+          font-size: 0.92rem;
+          letter-spacing: 0.32em;
+        }
+
+        .date-place {
+          margin-top: 2rem;
+
+          font-size: 0.9rem;
+
+          letter-spacing: 0.25em;
+        }
+
+        .countdown {
+          display: grid;
+
+          grid-template-columns:
+            repeat(4, 1fr);
+
+          gap: 0.8rem;
+
+          width: min(100%, 500px);
+
+          margin:
+            4rem
+            auto
+            2.5rem;
+        }
+
+        .count-item strong {
+          display: block;
+
+          font-size:
+            clamp(1.6rem, 6vw, 2.8rem);
+
+          line-height: 1;
+
+          font-weight: 400;
+        }
+
+        .count-item span {
+          display: block;
+
+          margin-top: 0.45rem;
+
+          color: var(--muted);
+
+          font-size: 0.48rem;
+
+          letter-spacing: 0.2em;
+        }
+
+        .calendar-button {
+          display: inline-flex;
+
+          align-items: center;
+          justify-content: center;
+
+          min-height: 58px;
+
+          padding:
+            0
+            1.5rem;
+
+          border:
+            1px solid
+            var(--burgundy);
+
+          color: var(--burgundy);
+
+          text-decoration: none;
+
+          font-size: 0.75rem;
+
+          letter-spacing: 0.17em;
+
+          background:
+            rgba(255,255,255,0.18);
+        }
+
+        .calendar-button span {
+          margin-right: 0.45rem;
+          font-size: 1.2rem;
+        }
+
+        /* ===================================================
+           FOTOS CARTAGENA
+        ==================================================== */
+
+        .cartagena-strip {
+          display: grid;
+
+          grid-template-columns:
+            repeat(3, 1fr);
+
+          gap: 5px;
+
+          height: 19vh;
+          min-height: 125px;
+
+          margin:
+            5rem
+            -1.35rem
+            -6rem;
+        }
+
+        .cartagena-photo {
+          overflow: hidden;
+
+          background:
+            linear-gradient(
+              135deg,
+              #c9c0ae,
+              #ddd1bc
+            );
+        }
+
+        .cartagena-photo img,
+        .cartagena-photo .image-fallback {
+          width: 100%;
+          height: 100%;
+
+          display: block;
+
+          object-fit: cover;
+
+          filter:
+            saturate(0.84)
+            sepia(0.06);
+        }
+
+        /* ===================================================
+           FALLBACK DE IMÁGENES
+        ==================================================== */
+
+        .image-fallback {
+          display: grid;
+          place-items: center;
+
+          background:
+            linear-gradient(
+              135deg,
+              rgba(89, 99, 74, 0.25),
+              rgba(191, 143, 91, 0.2)
+            );
+
+          color:
+            rgba(87, 41, 50, 0.55);
+
+          font-family: var(--serif);
+
+          font-size: 0.75rem;
+
+          letter-spacing: 0.18em;
+        }
+
+        /* ===================================================
+           HISTORIA
+        ==================================================== */
+
+        .story-section {
+          background: var(--paper-light);
+        }
+
+        .story-title {
+          margin:
+            1.2rem
+            0
+            3rem;
+
+          color: var(--burgundy);
+
+          font-size:
+            clamp(3.3rem, 12vw, 6.5rem);
+
+          line-height: 0.9;
+        }
+
+        .story-gallery {
+          position: relative;
+
+          width: min(90vw, 680px);
+
+          min-height: 500px;
+
+          margin:
+            0
+            auto;
+        }
+
+        .story-photo {
+          position: absolute;
+
+          overflow: hidden;
+
+          background: #ddd5c7;
+
+          box-shadow:
+            0 20px 50px
+            rgba(44,42,37,0.13);
+        }
+
+        .story-photo img,
+        .story-photo .image-fallback {
+          width: 100%;
+          height: 100%;
+
+          object-fit: cover;
+        }
+
+        .story-photo-main {
+          left: 2%;
+          top: 0;
+
+          width: 73%;
+          height: 430px;
+
+          transform:
+            rotate(-2.5deg);
+        }
+
+        .story-photo-small {
+          right: 0;
+          bottom: 0;
+
+          width: 40%;
+          height: 250px;
+
+          transform:
+            rotate(4deg);
+
+          border:
+            9px solid
+            var(--paper-light);
+        }
+
+        .botanical {
+          position: absolute;
+
+          color: var(--olive);
+
+          font-size: 3rem;
+
+          opacity: 0.6;
+        }
+
+        .botanical-one {
+          right: 12%;
+          top: -2rem;
+
+          transform:
+            rotate(20deg);
+        }
+
+        .botanical-two {
+          left: -2%;
+          bottom: 10%;
+
+          transform:
+            rotate(-35deg);
+        }
+
+        .story-text {
+          width: min(100%, 600px);
+
+          margin:
+            3.5rem
+            auto
+            0;
+
+          color: var(--muted);
+
+          font-size: 1.12rem;
+
+          line-height: 1.7;
+        }
+
+        /* ===================================================
+           DRESS CODE
+        ==================================================== */
+
+        .dress-section {
+          background: var(--olive);
+
+          color: var(--white);
+
+          min-height: 110svh;
+        }
+
+        .dress-section .watercolor-one {
+          background:
+            radial-gradient(
+              ellipse,
+              rgba(255,255,255,0.3),
+              transparent 70%
+            );
+        }
+
+        .dress-section .watercolor-two {
+          background:
+            radial-gradient(
+              ellipse,
+              rgba(180,108,80,0.35),
+              transparent 70%
+            );
+        }
+
+        .light {
+          color: var(--white);
+        }
+
+        .dress-art {
+          width: min(92vw, 640px);
+
+          margin:
+            0.5rem
+            auto
+            0;
+
+          mix-blend-mode: multiply;
+        }
+
+        .dress-art img,
+        .dress-art .image-fallback {
+          display: block;
+
           width: 100%;
 
-          margin-top: 28px;
+          max-height: 48vh;
 
-          border: 1px solid var(--burgundy);
-
-          background: var(--burgundy);
-          color: white;
-
-          padding: 16px;
-
-          font-family:
-            var(--font-cormorant),
-            Georgia,
-            serif;
-
-          font-size: 13px;
-          letter-spacing: .16em;
-
-          cursor: pointer;
+          object-fit: contain;
         }
 
-        .guest-error {
-          margin: 12px 0 0;
+        .dress-options {
+          display: grid;
 
-          font-family:
-            var(--font-dm-sans),
-            sans-serif;
+          grid-template-columns:
+            repeat(2, 1fr);
 
-          font-size: 12px;
-          line-height: 1.5;
+          gap: 1rem;
 
-          color: var(--burgundy);
+          width: min(100%, 680px);
+
+          margin:
+            0
+            auto
+            2.5rem;
         }
 
-        .guest-found {
-          margin-top: 25px;
-          padding: 25px;
-
-          border: 1px solid
-            rgba(87,41,50,.2);
-
-          background: rgba(87,41,50,.035);
-
-          text-align: center;
+        .dress-option {
+          padding: 0.8rem;
         }
 
-        .check {
-          width: 34px;
-          height: 34px;
+        .dress-diamond {
+          font-size: 2rem;
 
-          margin: 0 auto 10px;
+          line-height: 1;
 
-          border-radius: 50%;
-
-          display: flex;
-          align-items: center;
-          justify-content: center;
-
-          background: var(--olive);
-          color: white;
+          margin-bottom: 0.5rem;
         }
 
-        .guest-found p {
-          margin: 0 0 4px;
-
-          font-family:
-            var(--font-dm-sans),
-            sans-serif;
-
-          font-size: 11px;
-          color: var(--muted);
-        }
-
-        .guest-found strong {
-          font-family:
-            var(--font-cormorant),
-            Georgia,
-            serif;
-
-          font-size: 27px;
-          font-weight: 400;
-        }
-
-        /* =====================================================
-           CONFIRMACIÓN OCULTA
-        ===================================================== */
-
-        .confirmed-slide {
-          background: var(--burgundy);
-
-          display: flex;
-          align-items: center;
-          justify-content: center;
-
-          color: var(--ivory);
-          text-align: center;
-        }
-
-        .confirmed-content {
-          width: min(90%, 600px);
-        }
-
-        .confirmed-heart {
-          display: block;
-
-          margin-bottom: 30px;
-
-          font-size: 28px;
-        }
-
-        .confirmed-content .eyebrow {
-          color: var(--ivory);
-        }
-
-        .confirmed-content h2 {
-          color: var(--ivory);
-        }
-
-        .confirmed-line {
-          width: 55px;
-          height: 1px;
-
-          margin: 30px auto;
-
-          background: rgba(245,241,232,.5);
-        }
-
-        .confirmed-seats {
+        .dress-option h3 {
           margin: 0;
 
-          font-family:
-            var(--font-dm-sans),
-            sans-serif;
+          font-size:
+            clamp(2rem, 7vw, 3.4rem);
 
-          font-size: 9px;
-          letter-spacing: .25em;
-        }
+          line-height: 1;
 
-        .seat-number {
-          display: block;
-
-          margin-top: 5px;
-
-          font-family:
-            var(--font-cormorant),
-            Georgia,
-            serif;
-
-          font-size: 80px;
           font-weight: 400;
         }
 
-        .confirmed-message {
-          margin-top: 25px;
+        .dress-option p {
+          margin:
+            0.8rem
+            0
+            0;
 
-          font-family:
-            var(--font-parfumerie),
-            cursive;
+          font-size: 0.95rem;
 
-          font-size: 29px;
+          opacity: 0.92;
         }
 
-        /* =====================================================
-           NAVEGACIÓN
-        ===================================================== */
+        .plus-button {
+          width: 50px;
+          height: 50px;
 
-        .next-arrow {
-          position: absolute;
-          z-index: 20;
+          margin:
+            0.7rem
+            auto
+            0;
 
-          left: 50%;
-          bottom: 25px;
-
-          transform: translateX(-50%);
+          display: grid;
+          place-items: center;
 
           border: 0;
+
           background: transparent;
 
+          color: var(--white);
+
+          font-size: 2.4rem;
+
+          cursor: default;
+        }
+
+        .dress-note {
+          padding:
+            1.25rem
+            0;
+
+          border-top:
+            1px solid
+            rgba(248,245,237,0.35);
+
+          border-bottom:
+            1px solid
+            rgba(248,245,237,0.35);
+
+          font-size: 0.7rem;
+
+          line-height: 1.8;
+
+          letter-spacing: 0.28em;
+        }
+
+        /* ===================================================
+           RSVP
+        ==================================================== */
+
+        .rsvp-section {
+          background: var(--paper);
+        }
+
+        .rsvp-content {
+          width: min(100%, 620px);
+        }
+
+        .rsvp-text {
+          margin:
+            1.5rem
+            auto
+            2.5rem;
+
+          color: var(--muted);
+
+          font-size: 1.05rem;
+
+          line-height: 1.6;
+        }
+
+        .rsvp-form {
+          display: grid;
+
+          gap: 0.8rem;
+
+          text-align: left;
+        }
+
+        .rsvp-form label {
           color: var(--burgundy);
 
-          font-size: 24px;
+          font-size: 0.7rem;
+
+          letter-spacing: 0.2em;
+        }
+
+        .rsvp-form input {
+          width: 100%;
+
+          padding:
+            1rem
+            0;
+
+          border: 0;
+
+          border-bottom:
+            1px solid
+            rgba(87,41,50,0.45);
+
+          outline: none;
+
+          background: transparent;
+
+          color: var(--ink);
+
+          font-family: var(--serif);
+
+          font-size: 1.25rem;
+        }
+
+        .rsvp-form input:focus {
+          border-bottom-color:
+            var(--burgundy);
+        }
+
+        .rsvp-form input::placeholder {
+          color: rgba(45,42,37,0.45);
+        }
+
+        .rsvp-error {
+          margin: 0.2rem 0;
+
+          color: var(--burgundy);
+
+          font-size: 0.9rem;
+        }
+
+        .confirm-button {
+          width: 100%;
+
+          min-height: 58px;
+
+          margin-top: 1rem;
+
+          border:
+            1px solid
+            var(--burgundy);
+
+          background: var(--burgundy);
+
+          color: var(--white);
 
           cursor: pointer;
 
-          animation: arrowFloat 2s ease-in-out infinite;
+          letter-spacing: 0.16em;
+
+          text-transform: uppercase;
         }
 
-        .next-arrow.dark {
+        .confirm-button:disabled {
+          opacity: 0.55;
+        }
+
+        /* ===================================================
+           CONFIRMACIÓN
+        ==================================================== */
+
+        .confirmation-section {
+          min-height: 85svh;
+
+          background:
+            linear-gradient(
+              145deg,
+              rgba(89,99,74,0.1),
+              transparent 45%,
+              rgba(87,41,50,0.08)
+            ),
+            var(--paper);
+        }
+
+        .confirmation-monogram {
+          margin:
+            2rem
+            0;
+
           color: var(--burgundy);
+
+          font-family: var(--script);
+
+          font-size: 5rem;
         }
 
-        .light-arrow {
-          color: var(--ivory);
-        }
+        .confirmation-title {
+          max-width: 700px;
 
-        .back-button {
-          position: fixed;
-          z-index: 100;
-
-          top: 20px;
-          left: 18px;
-
-          width: 35px;
-          height: 35px;
-
-          border: 1px solid
-            rgba(87,41,50,.25);
-
-          border-radius: 50%;
-
-          background: rgba(245,241,232,.7);
+          margin: 0 auto;
 
           color: var(--burgundy);
 
-          cursor: pointer;
+          font-size:
+            clamp(3.2rem, 12vw, 6.3rem);
+
+          line-height: 0.9;
         }
 
-        @keyframes arrowFloat {
-          0%,
-          100% {
-            transform:
-              translateX(-50%)
-              translateY(0);
+        .confirmation-text {
+          margin-top: 2rem;
+
+          color: var(--muted);
+
+          font-size: 1.15rem;
+        }
+
+        /* ===================================================
+           FOOTER
+        ==================================================== */
+
+        .footer {
+          display: flex;
+
+          flex-direction: column;
+
+          align-items: center;
+
+          gap: 0.8rem;
+
+          padding:
+            4rem
+            1rem
+            5rem;
+
+          background: var(--paper);
+
+          color: var(--burgundy);
+
+          text-align: center;
+        }
+
+        .footer-names {
+          font-size: 3.2rem;
+        }
+
+        .footer small {
+          font-size: 0.55rem;
+
+          letter-spacing: 0.18em;
+        }
+
+        /* ===================================================
+           ANIMACIÓN
+        ==================================================== */
+
+        @keyframes coverIn {
+          from {
+            opacity: 0;
+            transform: scale(1.015);
           }
 
-          50% {
-            transform:
-              translateX(-50%)
-              translateY(5px);
+          to {
+            opacity: 1;
+            transform: scale(1);
           }
         }
 
-        /* =====================================================
-           MÓVIL
-        ===================================================== */
+        /* ===================================================
+           TABLET / DESKTOP
+        ==================================================== */
 
-        @media (max-width: 600px) {
+        @media (min-width: 700px) {
 
-          .cover-content h1 {
-            font-size: 59px;
-          }
-
-          .cover-small {
-            font-size: 15px;
-          }
-
-          .save-title {
-            font-size: 16px;
-          }
-
-          .date-content {
-            padding-top: 6vh;
-          }
-
-          .calendar-date strong {
-            font-size: 82px;
+          .section {
+            padding-left: 3rem;
+            padding-right: 3rem;
           }
 
           .cartagena-strip {
-            height: 25vh;
-            min-height: 160px;
+            margin-left: -3rem;
+            margin-right: -3rem;
           }
 
-          .story-slide {
-            padding: 9vh 22px;
-          }
-
-          .story-photos {
-            margin-top: 40px;
-            grid-template-columns: 1.1fr .9fr;
-          }
-
-          .story-photo.large {
-            height: 310px;
-          }
-
-          .story-photo.small {
-            height: 250px;
-          }
-
-          .dress-grid {
-            gap: 18px;
-            margin: 45px 0;
-          }
-
-          .dress-column h3 {
-            font-size: 28px;
-          }
-
-          .follow-button {
-            bottom: 6vh;
+          .dress-art img,
+          .dress-art .image-fallback {
+            max-height: 52vh;
           }
         }
 
-        @media (max-width: 380px) {
+        /* ===================================================
+           REDUCIR ANIMACIONES
+        ==================================================== */
 
-          .cover-content h1 {
-            font-size: 51px;
+        @media (prefers-reduced-motion: reduce) {
+
+          html {
+            scroll-behavior: auto;
           }
 
-          .calendar-date strong {
-            font-size: 70px;
-          }
-
-          .countdown {
-            gap: 13px;
-          }
-
-          .countdown strong {
-            font-size: 26px;
-          }
-
-          .countdown span {
-            font-size: 7px;
+          * {
+            animation-duration: 0.01ms !important;
+            transition-duration: 0.01ms !important;
           }
         }
 
       `}</style>
+
     </main>
   );
 }
