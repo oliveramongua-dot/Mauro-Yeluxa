@@ -1,624 +1,376 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
-const WEDDING_DATE = new Date('2027-03-14T16:00:00-05:00');
-const RSVP_DEADLINE = '15 de noviembre de 2026';
+/* =========================================================
+   CONFIGURACIÓN
+========================================================= */
+
+const WEDDING_DATE = new Date('2027-03-06T16:00:00-05:00');
+
+/*
+  Cuando subamos las fotos de ustedes a /public,
+  cambia solamente estos nombres.
+*/
+const COUPLE_PHOTOS = [
+  '/foto-pareja-1.jpg',
+  '/foto-pareja-2.jpg',
+  '/foto-pareja-3.jpg',
+];
+
+/*
+  Lista de invitados.
+  MÁS ADELANTE reemplazaremos estos ejemplos por la lista real.
+*/
+const GUESTS = [
+  {
+    name: 'Mauro Olivera',
+    seats: 2,
+  },
+  {
+    name: 'Juan Perez',
+    seats: 1,
+  },
+  {
+    name: 'Maria Gonzalez',
+    seats: 2,
+  },
+];
+
+/* =========================================================
+   UTILIDADES
+========================================================= */
+
+function normalizeName(value) {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/* =========================================================
+   CUENTA REGRESIVA
+========================================================= */
 
 function Countdown() {
-  const [left, setLeft] = useState({
-    d: 0,
-    h: 0,
-    m: 0,
-    s: 0,
-  });
+  const calculate = () => {
+    const difference = Math.max(
+      0,
+      WEDDING_DATE.getTime() - Date.now()
+    );
+
+    return {
+      days: Math.floor(difference / 86400000),
+      hours: Math.floor(difference / 3600000) % 24,
+      minutes: Math.floor(difference / 60000) % 60,
+      seconds: Math.floor(difference / 1000) % 60,
+    };
+  };
+
+  const [time, setTime] = useState(calculate);
 
   useEffect(() => {
-    const tick = () => {
-      const diff = Math.max(
-        0,
-        WEDDING_DATE.getTime() - Date.now()
-      );
+    const interval = setInterval(() => {
+      setTime(calculate());
+    }, 1000);
 
-      setLeft({
-        d: Math.floor(diff / 86400000),
-        h: Math.floor(diff / 3600000) % 24,
-        m: Math.floor(diff / 60000) % 60,
-        s: Math.floor(diff / 1000) % 60,
-      });
-    };
-
-    tick();
-
-    const id = setInterval(tick, 1000);
-
-    return () => clearInterval(id);
+    return () => clearInterval(interval);
   }, []);
 
   return (
     <div className="countdown">
-      {[
-        ['DÍAS', left.d],
-        ['HORAS', left.h],
-        ['MINUTOS', left.m],
-        ['SEGUNDOS', left.s],
-      ].map(([label, value]) => (
-        <div className="time" key={label}>
-          <strong>{String(value).padStart(2, '0')}</strong>
-          <span>{label}</span>
-        </div>
-      ))}
+      <div>
+        <strong>{String(time.days).padStart(2, '0')}</strong>
+        <span>DÍAS</span>
+      </div>
+
+      <div>
+        <strong>{String(time.hours).padStart(2, '0')}</strong>
+        <span>HORAS</span>
+      </div>
+
+      <div>
+        <strong>{String(time.minutes).padStart(2, '0')}</strong>
+        <span>MINUTOS</span>
+      </div>
+
+      <div>
+        <strong>{String(time.seconds).padStart(2, '0')}</strong>
+        <span>SEGUNDOS</span>
+      </div>
     </div>
   );
 }
 
-export default function Home() {
-  const [answer, setAnswer] = useState('');
-  const [sent, setSent] = useState(false);
+/* =========================================================
+   FOTO CON FALLBACK
+========================================================= */
 
-  const [showIntro, setShowIntro] = useState(true);
-  const [opening, setOpening] = useState(false);
+function CouplePhoto({ src, className = '' }) {
+  const [failed, setFailed] = useState(false);
 
-  const openInvitation = () => {
-    if (opening) return;
-
-    setOpening(true);
-
-    setTimeout(() => {
-      setShowIntro(false);
-
-      window.scrollTo({
-        top: 0,
-        behavior: 'instant',
-      });
-    }, 1450);
-  };
-
-  const submit = (e) => {
-    e.preventDefault();
-
-    if (!answer) return;
-
-    setSent(true);
-  };
-
-  if (showIntro) {
+  if (failed) {
     return (
-      <>
-        <main
-          className={`envelope-screen ${
-            opening ? 'is-opening' : ''
-          }`}
-          onClick={openInvitation}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              openInvitation();
-            }
-          }}
-        >
-          {/* FONDO */}
-          <div className="envelope-background" />
-
-          {/* INVITACIÓN QUE SALE DEL SOBRE */}
-          <div className="paper-reveal">
-            <div className="paper-inner">
-              <div className="paper-monogram">M&Y</div>
-
-              <div className="paper-line" />
-
-              <p>MAURO & YELUXA</p>
-
-              <span>NUESTRA BODA</span>
-
-              <small>
-                CARTAGENA DE INDIAS
-                <br />
-                14 · MARZO · 2027
-              </small>
-            </div>
-          </div>
-
-          {/* SOBRE */}
-          <div className="envelope-photo">
-            <img
-              src="/4F54E911-D943-4FBF-9EC9-FECC9EB0FF70.png"
-              alt="Invitación de boda de Mauro y Yeluxa"
-            />
-          </div>
-
-          {/* INDICADOR MUY SUTIL */}
-          {!opening && (
-            <div className="touch-hint">
-              <span>TOCA PARA ABRIR</span>
-              <i>↓</i>
-            </div>
-          )}
-
-          {/* DESTELLO DURANTE LA APERTURA */}
-          <div className="opening-light" />
-        </main>
-
-        <style>{`
-          * {
-            box-sizing: border-box;
-          }
-
-          html,
-          body {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            background: #f5f1e8;
-          }
-
-          .envelope-screen {
-            position: fixed;
-            inset: 0;
-            width: 100vw;
-            height: 100dvh;
-            min-height: 100vh;
-            z-index: 99999;
-            overflow: hidden;
-            background: #f5f1e8;
-            cursor: pointer;
-            -webkit-tap-highlight-color: transparent;
-          }
-
-          /*
-            FONDO CREMA
-          */
-
-          .envelope-background {
-            position: absolute;
-            inset: 0;
-            background:
-              radial-gradient(
-                circle at 50% 45%,
-                #fffdf8 0%,
-                #f8f4eb 45%,
-                #eee7da 100%
-              );
-          }
-
-          /*
-            TARJETA QUE SALE DE DETRÁS
-          */
-
-          .paper-reveal {
-            position: absolute;
-            z-index: 1;
-            left: 50%;
-            bottom: -12%;
-            width: min(78vw, 430px);
-            height: min(82vh, 690px);
-            transform:
-              translateX(-50%)
-              translateY(105%);
-            background:
-              linear-gradient(
-                135deg,
-                #fffdf8,
-                #f4eee2
-              );
-            box-shadow:
-              0 25px 70px rgba(48, 42, 31, .18),
-              0 4px 15px rgba(48, 42, 31, .08);
-            transition:
-              transform 1.15s cubic-bezier(.16,.72,.25,1);
-          }
-
-          .paper-inner {
-            position: absolute;
-            inset: 18px;
-            border: 1px solid rgba(87,41,50,.18);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            color: #3e4734;
-          }
-
-          .paper-monogram {
-            font-family:
-              var(--font-cormorant),
-              Georgia,
-              serif;
-            font-size: 72px;
-            font-style: italic;
-            line-height: 1;
-            color: #572932;
-          }
-
-          .paper-line {
-            width: 55px;
-            height: 1px;
-            background: #a49683;
-            margin: 20px 0;
-          }
-
-          .paper-inner p {
-            margin: 0;
-            font-family:
-              var(--font-dm-sans),
-              sans-serif;
-            font-size: 9px;
-            letter-spacing: .3em;
-          }
-
-          .paper-inner span {
-            margin-top: 12px;
-            font-family:
-              var(--font-cormorant),
-              Georgia,
-              serif;
-            font-size: 28px;
-            letter-spacing: .04em;
-          }
-
-          .paper-inner small {
-            margin-top: 30px;
-            font-family:
-              var(--font-dm-sans),
-              sans-serif;
-            font-size: 8px;
-            line-height: 2;
-            letter-spacing: .2em;
-          }
-
-          /*
-            SOBRE / IMAGEN
-          */
-
-          .envelope-photo {
-            position: absolute;
-            z-index: 3;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-
-            transform-origin: center bottom;
-
-            transition:
-              transform 1.25s cubic-bezier(.18,.72,.22,1),
-              opacity .8s ease,
-              filter 1s ease;
-          }
-
-          .envelope-photo img {
-            display: block;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            object-position: center center;
-            user-select: none;
-            -webkit-user-drag: none;
-          }
-
-          /*
-            INDICACIÓN
-          */
-
-          .touch-hint {
-            position: absolute;
-            z-index: 10;
-            left: 50%;
-            bottom: 4.5vh;
-            transform: translateX(-50%);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 9px;
-            color: rgba(62,71,52,.85);
-            pointer-events: none;
-            animation: hintFloat 2.2s ease-in-out infinite;
-          }
-
-          .touch-hint span {
-            font-family:
-              var(--font-dm-sans),
-              sans-serif;
-            font-size: 8px;
-            letter-spacing: .3em;
-            white-space: nowrap;
-          }
-
-          .touch-hint i {
-            font-family:
-              var(--font-cormorant),
-              Georgia,
-              serif;
-            font-size: 17px;
-            font-style: normal;
-          }
-
-          @keyframes hintFloat {
-            0%, 100% {
-              transform: translateX(-50%) translateY(0);
-              opacity: .72;
-            }
-
-            50% {
-              transform: translateX(-50%) translateY(5px);
-              opacity: 1;
-            }
-          }
-
-          /*
-            LUZ
-          */
-
-          .opening-light {
-            position: absolute;
-            z-index: 20;
-            inset: -30%;
-            background:
-              radial-gradient(
-                circle at center,
-                rgba(255,255,255,.95) 0%,
-                rgba(255,255,255,.4) 18%,
-                rgba(255,255,255,0) 55%
-              );
-            opacity: 0;
-            pointer-events: none;
-          }
-
-          /*
-            ANIMACIÓN DE APERTURA
-          */
-
-          .envelope-screen.is-opening
-            .envelope-photo {
-            transform:
-              translateY(-105%)
-              scale(1.08)
-              rotateX(7deg);
-            opacity: 0;
-            filter: brightness(1.08);
-          }
-
-          .envelope-screen.is-opening
-            .paper-reveal {
-            transform:
-              translateX(-50%)
-              translateY(-2%);
-          }
-
-          .envelope-screen.is-opening
-            .opening-light {
-            animation: openingLight 1.4s ease forwards;
-          }
-
-          .envelope-screen.is-opening
-            .touch-hint {
-            opacity: 0;
-            transition: opacity .25s ease;
-          }
-
-          @keyframes openingLight {
-            0% {
-              opacity: 0;
-            }
-
-            55% {
-              opacity: .75;
-            }
-
-            100% {
-              opacity: 0;
-            }
-          }
-
-          /*
-            PANTALLAS MUY ALTAS
-          */
-
-          @media (min-height: 850px) and (max-width: 600px) {
-            .touch-hint {
-              bottom: 5.5vh;
-            }
-          }
-
-          /*
-            IPHONE PEQUEÑO
-          */
-
-          @media (max-width: 380px) {
-            .paper-reveal {
-              width: 84vw;
-            }
-
-            .paper-monogram {
-              font-size: 62px;
-            }
-          }
-
-          /*
-            EVITAR SCROLL / MOVIMIENTO
-          */
-
-          @media (max-width: 600px) {
-            .envelope-screen {
-              touch-action: manipulation;
-            }
-          }
-
-          @media (prefers-reduced-motion: reduce) {
-            .envelope-photo,
-            .paper-reveal {
-              transition-duration: .3s;
-            }
-
-            .touch-hint {
-              animation: none;
-            }
-          }
-        `}</style>
-      </>
+      <div className={`couple-placeholder ${className}`}>
+        <span>M&Y</span>
+      </div>
     );
   }
 
   return (
-    <>
-      <main>
-        <nav className="nav">
-          <span className="monogram">M&Y</span>
+    <img
+      src={src}
+      alt="Mauro y Yeluxa"
+      className={`couple-photo ${className}`}
+      onError={() => setFailed(true)}
+    />
+  );
+}
 
-          <div className="nav-links">
-            <a href="#fecha">Fecha</a>
-            <a href="#cartagena">Cartagena</a>
-            <a href="#historia">Historia</a>
-            <a href="#dress">Dress code</a>
-            <a href="#rsvp">RSVP</a>
+/* =========================================================
+   APP
+========================================================= */
+
+export default function Home() {
+  const [slide, setSlide] = useState(0);
+
+  const [guestName, setGuestName] = useState('');
+  const [guestError, setGuestError] = useState('');
+  const [guest, setGuest] = useState(null);
+
+  const normalizedInput = useMemo(
+    () => normalizeName(guestName),
+    [guestName]
+  );
+
+  const goToSlide = (number) => {
+    setSlide(number);
+
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth',
+    });
+  };
+
+  const validateGuest = () => {
+    setGuestError('');
+
+    if (!normalizedInput) {
+      setGuestError('Escribe tu nombre completo.');
+      return;
+    }
+
+    const found = GUESTS.find(
+      (item) => normalizeName(item.name) === normalizedInput
+    );
+
+    if (!found) {
+      setGuestError(
+        'No encontramos este nombre en nuestra lista de invitados. Verifica cómo lo escribiste.'
+      );
+      setGuest(null);
+      return;
+    }
+
+    setGuest(found);
+  };
+
+  const confirmAttendance = () => {
+    if (!guest) return;
+
+    goToSlide(6);
+  };
+
+  return (
+    <main className="wedding">
+
+      {/* =====================================================
+          SLIDE 1 — PORTADA
+      ===================================================== */}
+
+      {slide === 0 && (
+        <section className="slide cover-slide">
+
+          <div className="cover-background">
+            <CouplePhoto
+              src={COUPLE_PHOTOS[0]}
+              className="cover-main-photo"
+            />
+
+            <div className="cover-overlay" />
           </div>
-        </nav>
 
-        {/* HERO */}
+          <div className="cover-content">
 
-        <section className="hero">
-          <div className="hero-overlay" />
+            <p className="cover-small">
+              NOS CASAMOS
+            </p>
 
-          <div className="hero-content">
+            <h1>
+              Mauro <em>&</em> Yeluxa
+            </h1>
+
+            <div className="cover-line" />
+
+            <p className="save-title">
+              SAVE THE DATE
+            </p>
+
+          </div>
+
+          <button
+            className="follow-button"
+            onClick={() => goToSlide(1)}
+          >
+            síguenos..
+          </button>
+
+        </section>
+      )}
+
+      {/* =====================================================
+          SLIDE 2 — SAVE THE DATE
+      ===================================================== */}
+
+      {slide === 1 && (
+        <section className="slide date-slide">
+
+          <div className="top-label">
+            SAVE THE DATE
+          </div>
+
+          <div className="date-content">
+
             <p className="eyebrow">
               NUESTRA BODA
             </p>
 
-            <h1>
-              MAURO <em>&</em> YELUXA
-            </h1>
-
-            <p className="location">
-              CARTAGENA DE INDIAS · MARZO 2027
-            </p>
-
-            <span className="scroll">
-              GUARDA ESTA FECHA ↓
-            </span>
-          </div>
-        </section>
-
-        {/* FECHA */}
-
-        <section
-          id="fecha"
-          className="section ivory centered"
-        >
-          <p className="eyebrow olive-text">
-            SAVE THE DATE
-          </p>
-
-          <h2>
-            Reserva esta fecha
-          </h2>
-
-          <p className="date">
-            14 · MARZO · 2027
-          </p>
-
-          <p className="smallcaps">
-            CARTAGENA DE INDIAS · CENTRO HISTÓRICO
-          </p>
-
-          <Countdown />
-
-          <button
-            className="outline-btn"
-            onClick={() =>
-              alert(
-                'En la siguiente etapa conectaremos tu calendario.'
-              )
-            }
-          >
-            + AÑADIR A MI CALENDARIO
-          </button>
-        </section>
-
-        {/* CARTAGENA */}
-
-        <section
-          id="cartagena"
-          className="section split"
-        >
-          <div className="image-card cartagena-image">
-            <span>
-              Cartagena de Indias
-            </span>
-          </div>
-
-          <div className="copy-card">
-            <p className="eyebrow olive-text">
-              EL LUGAR
-            </p>
-
             <h2>
-              Una fecha en el
-              <br />
-              Centro Histórico
+              Reserva esta fecha
             </h2>
 
-            <p>
-              Queremos compartir este momento
-              contigo en el corazón de Cartagena
-              de Indias, entre murallas, historia,
-              arquitectura y el encanto de una
-              ciudad que significa tanto para
-              nosotros.
+            <div className="calendar-date">
+              <span>SÁBADO</span>
+              <strong>06</strong>
+              <span>MARZO · 2027</span>
+            </div>
+
+            <p className="location">
+              CARTAGENA DE INDIAS
             </p>
 
-            <p className="script">
-              Allí nos veremos.
-            </p>
+            <Countdown />
+
+            <button
+              className="outline-button"
+              onClick={() => {
+                const calendarUrl =
+                  'https://calendar.google.com/calendar/render?action=TEMPLATE&text=Mauro%20%26%20Yeluxa%20-%20Nuestra%20Boda&dates=20270306T160000/20270306T235900&details=Nos%20vemos%20en%20Cartagena%20de%20Indias.&location=Cartagena%20de%20Indias';
+
+                window.open(
+                  calendarUrl,
+                  '_blank'
+                );
+              }}
+            >
+              + AÑADIR A MI CALENDARIO
+            </button>
+
           </div>
+
+          <div className="cartagena-strip">
+
+            <div className="cartagena-photo photo-one">
+              <div />
+            </div>
+
+            <div className="cartagena-photo photo-two">
+              <div />
+            </div>
+
+            <div className="cartagena-photo photo-three">
+              <div />
+            </div>
+
+          </div>
+
+          <button
+            className="next-arrow"
+            onClick={() => goToSlide(2)}
+            aria-label="Continuar"
+          >
+            ↓
+          </button>
+
         </section>
+      )}
 
-        {/* HISTORIA */}
+      {/* =====================================================
+          SLIDE 3 — NUESTRA HISTORIA
+      ===================================================== */}
 
-        <section
-          id="historia"
-          className="section ivory"
-        >
-          <div className="narrow centered">
-            <p className="eyebrow burgundy-text">
+      {slide === 2 && (
+        <section className="slide story-slide">
+
+          <div className="story-header">
+            <p className="eyebrow">
               NUESTRA HISTORIA
             </p>
 
             <h2>
-              El comienzo de un nuevo capítulo
+              Un nuevo capítulo
             </h2>
 
-            <p>
+            <p className="story-text">
               Después de tantos momentos
               compartidos, viajes, sueños y
               aventuras, llegó el momento de
               comenzar un nuevo capítulo juntos.
             </p>
-
-            <div className="photo-grid">
-              <div className="photo-placeholder photo-one" />
-              <div className="photo-placeholder photo-two" />
-            </div>
-
-            <p className="quote">
-              “La vida es más linda cuando
-              la compartimos.”
-            </p>
           </div>
+
+          <div className="story-photos">
+
+            <CouplePhoto
+              src={COUPLE_PHOTOS[1]}
+              className="story-photo large"
+            />
+
+            <CouplePhoto
+              src={COUPLE_PHOTOS[2]}
+              className="story-photo small"
+            />
+
+          </div>
+
+          <p className="story-quote">
+            “La vida es más linda cuando
+            la compartimos.”
+          </p>
+
+          <button
+            className="next-arrow dark"
+            onClick={() => goToSlide(3)}
+            aria-label="Continuar"
+          >
+            ↓
+          </button>
+
         </section>
+      )}
 
-        {/* DRESS CODE */}
+      {/* =====================================================
+          SLIDE 4 — DRESS CODE
+      ===================================================== */}
 
-        <section
-          id="dress"
-          className="section olive"
-        >
-          <div className="narrow centered light-text">
-            <p className="eyebrow">
+      {slide === 3 && (
+        <section className="slide dress-slide">
+
+          <div className="dress-content">
+
+            <p className="eyebrow light">
               DRESS CODE
             </p>
 
@@ -627,10 +379,11 @@ export default function Home() {
             </h2>
 
             <div className="dress-grid">
-              <div>
-                <div className="dress-icon">
+
+              <div className="dress-column">
+                <span className="dress-symbol">
                   ♢
-                </div>
+                </span>
 
                 <h3>
                   Hombres
@@ -643,179 +396,217 @@ export default function Home() {
                 </p>
               </div>
 
-              <div>
-                <div className="dress-icon">
+              <div className="dress-column">
+                <span className="dress-symbol">
                   ♢
-                </div>
+                </span>
 
                 <h3>
                   Mujeres
                 </h3>
 
                 <p>
-                  Vestido formal largo
+                  Vestido formal
                 </p>
               </div>
+
             </div>
 
-            <div className="notice">
+            <div className="white-note">
               EL BLANCO ESTÁ RESERVADO
               <br />
-              PARA LOS NOVIOS.
+              PARA LOS NOVIOS
             </div>
+
           </div>
+
+          <button
+            className="next-arrow light-arrow"
+            onClick={() => goToSlide(4)}
+            aria-label="Continuar"
+          >
+            ↓
+          </button>
+
         </section>
+      )}
 
-        {/* RSVP */}
+      {/* =====================================================
+          SLIDE 5 — CONFIRMA ASISTENCIA
+      ===================================================== */}
 
-        <section
-          id="rsvp"
-          className="section ivory centered"
-        >
-          <div className="narrow">
-            <p className="eyebrow burgundy-text">
-              PRIMERA ETAPA
+      {slide === 4 && (
+        <section className="slide rsvp-slide">
+
+          <div className="rsvp-content">
+
+            <p className="eyebrow burgundy">
+              CONFIRMA ASISTENCIA
             </p>
 
             <h2>
-              ¿Podemos contar contigo?
+              Queremos contar contigo
             </h2>
 
-            <p>
-              Estamos preparando este día con
-              mucho cariño y queremos saber si
-              podremos celebrarlo contigo.
+            <p className="rsvp-intro">
+              Escribe tu nombre completo para
+              confirmar tu invitación.
             </p>
 
-            <p className="rsvp-deadline">
-              Confirma tu intención de asistir
-              antes del{' '}
-              <strong>
-                {RSVP_DEADLINE}
-              </strong>
-              .
-            </p>
+            <div className="name-form">
 
-            {!sent ? (
-              <form
-                className="rsvp"
-                onSubmit={submit}
-              >
-                <label>
-                  <span>
-                    Tu nombre
-                  </span>
+              <label htmlFor="guest-name">
+                NOMBRE COMPLETO
+              </label>
 
-                  <input
-                    required
-                    placeholder="Escribe tu nombre"
-                  />
-                </label>
+              <input
+                id="guest-name"
+                type="text"
+                value={guestName}
+                onChange={(e) => {
+                  setGuestName(e.target.value);
+                  setGuestError('');
+                  setGuest(null);
+                }}
+                placeholder="Escribe tu nombre"
+                autoComplete="name"
+              />
 
-                <div className="choices">
-                  <label
-                    className={
-                      answer === 'yes'
-                        ? 'choice selected'
-                        : 'choice'
-                    }
-                  >
-                    <input
-                      type="radio"
-                      name="rsvp"
-                      value="yes"
-                      checked={
-                        answer === 'yes'
-                      }
-                      onChange={(e) =>
-                        setAnswer(
-                          e.target.value
-                        )
-                      }
-                    />
-
-                    <span>
-                      SÍ, QUIERO ACOMPAÑARLOS
-                    </span>
-                  </label>
-
-                  <label
-                    className={
-                      answer === 'no'
-                        ? 'choice selected'
-                        : 'choice'
-                    }
-                  >
-                    <input
-                      type="radio"
-                      name="rsvp"
-                      value="no"
-                      checked={
-                        answer === 'no'
-                      }
-                      onChange={(e) =>
-                        setAnswer(
-                          e.target.value
-                        )
-                      }
-                    />
-
-                    <span>
-                      NO PODRÉ ACOMPAÑARLOS
-                    </span>
-                  </label>
-                </div>
-
-                <button
-                  className="primary-btn"
-                  type="submit"
-                >
-                  ENVIAR RESPUESTA
-                </button>
-              </form>
-            ) : (
-              <div className="success">
-                <span>♥</span>
-
-                <h3>
-                  Gracias por respondernos.
-                </h3>
-
-                <p>
-                  Guardaremos tu respuesta
-                  con mucho cariño.
+              {guestError && (
+                <p className="guest-error">
+                  {guestError}
                 </p>
-              </div>
-            )}
+              )}
+
+              {!guest && (
+                <button
+                  className="primary-button"
+                  onClick={validateGuest}
+                >
+                  CONTINUAR
+                </button>
+              )}
+
+              {guest && (
+                <div className="guest-found">
+
+                  <div className="check">
+                    ✓
+                  </div>
+
+                  <p>
+                    Invitación encontrada
+                  </p>
+
+                  <strong>
+                    {guest.name}
+                  </strong>
+
+                  <button
+                    className="primary-button"
+                    onClick={confirmAttendance}
+                  >
+                    ENVIAR CONFIRMACIÓN
+                  </button>
+
+                </div>
+              )}
+
+            </div>
+
           </div>
+
         </section>
+      )}
 
-        {/* FOOTER */}
+      {/* =====================================================
+          SLIDE 6 — OCULTO HASTA CONFIRMACIÓN
+      ===================================================== */}
 
-        <footer className="footer">
-          <span>
-            M&Y
-          </span>
+      {slide === 6 && guest && (
+        <section className="slide confirmed-slide">
 
-          <p>
-            NOS VEMOS EN CARTAGENA · MARZO 2027
-          </p>
-        </footer>
-      </main>
+          <div className="confirmed-content">
+
+            <span className="confirmed-heart">
+              ♥
+            </span>
+
+            <p className="eyebrow">
+              CONFIRMACIÓN RECIBIDA
+            </p>
+
+            <h2>
+              Nos vemos en Cartagena
+            </h2>
+
+            <div className="confirmed-line" />
+
+            <p className="confirmed-seats">
+              CUPOS CONFIRMADOS
+            </p>
+
+            <strong className="seat-number">
+              {guest.seats}
+            </strong>
+
+            <p className="confirmed-message">
+              Muy pronto te enviaremos
+              más detalles.
+            </p>
+
+          </div>
+
+        </section>
+      )}
+
+      {/* =====================================================
+          NAVEGACIÓN LATERAL
+      ===================================================== */}
+
+      {slide > 0 && slide < 6 && (
+        <button
+          className="back-button"
+          onClick={() =>
+            goToSlide(slide - 1)
+          }
+          aria-label="Regresar"
+        >
+          ←
+        </button>
+      )}
+
+      {/* =====================================================
+          ESTILOS
+      ===================================================== */}
 
       <style>{`
+
+        :root {
+          --ivory: #f5f1e8;
+          --paper: #eee8dc;
+          --olive: #59634a;
+          --deep: #3e4734;
+          --burgundy: #572932;
+          --ink: #27261f;
+          --muted: #777267;
+          --line: rgba(62,71,52,.2);
+        }
+
         * {
           box-sizing: border-box;
         }
 
-        html {
-          scroll-behavior: smooth;
+        html,
+        body {
+          margin: 0;
+          padding: 0;
+          background: var(--ivory);
+          color: var(--ink);
         }
 
         body {
-          margin: 0;
-          background: #f5f1e8;
-          color: #27261f;
+          overflow-x: hidden;
         }
 
         button,
@@ -823,521 +614,969 @@ export default function Home() {
           font: inherit;
         }
 
-        .nav {
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          z-index: 100;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 22px 30px;
-          color: white;
+        button {
+          -webkit-tap-highlight-color: transparent;
         }
 
-        .monogram {
-          font-family:
-            var(--font-cormorant),
-            Georgia,
-            serif;
-          font-size: 25px;
-          font-style: italic;
-        }
-
-        .nav-links {
-          display: flex;
-          gap: 24px;
-        }
-
-        .nav-links a {
-          color: white;
-          text-decoration: none;
-          font-family:
-            var(--font-dm-sans),
-            sans-serif;
-          font-size: 10px;
-          letter-spacing: .16em;
-          text-transform: uppercase;
-        }
-
-        .hero {
-          position: relative;
+        .wedding {
           min-height: 100svh;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background:
-            linear-gradient(
-              rgba(25,25,20,.25),
-              rgba(25,25,20,.48)
-            ),
-            linear-gradient(
-              135deg,
-              #59634a,
-              #3e4734
-            );
+          background: var(--ivory);
+        }
+
+        .slide {
+          min-height: 100svh;
+          width: 100%;
+          position: relative;
           overflow: hidden;
         }
 
-        .hero::before {
-          content: '';
-          position: absolute;
-          inset: 0;
-          background:
-            radial-gradient(
-              circle at center,
-              transparent 0,
-              rgba(0,0,0,.2) 100%
-            );
+        /* =====================================================
+           PORTADA
+        ===================================================== */
+
+        .cover-slide {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          background: var(--deep);
         }
 
-        .hero-overlay {
+        .cover-background {
           position: absolute;
           inset: 0;
+        }
+
+        .cover-main-photo {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          object-position: center;
+          display: block;
+        }
+
+        .cover-overlay {
+          position: absolute;
+          inset: 0;
+
           background:
             linear-gradient(
               to bottom,
-              rgba(0,0,0,.12),
-              rgba(0,0,0,.38)
+              rgba(20,28,18,.18),
+              rgba(20,28,18,.42)
             );
         }
 
-        .hero-content {
+        .cover-content {
           position: relative;
           z-index: 2;
+          width: 90%;
+          max-width: 700px;
           text-align: center;
-          color: white;
-          padding: 24px;
         }
 
-        .eyebrow {
-          margin: 0 0 18px;
-          font-family:
-            var(--font-dm-sans),
-            sans-serif;
-          font-size: 10px;
-          font-weight: 500;
-          letter-spacing: .32em;
-          text-transform: uppercase;
-        }
+        .cover-small {
+          margin: 0 0 20px;
 
-        .hero h1 {
-          margin: 0;
           font-family:
             var(--font-cormorant),
             Georgia,
             serif;
-          font-size: clamp(52px, 14vw, 110px);
+
+          font-size: 18px;
+          letter-spacing: .25em;
+        }
+
+        .cover-content h1 {
+          margin: 0;
+
+          font-family:
+            var(--font-cormorant),
+            Georgia,
+            serif;
+
+          font-size: clamp(
+            54px,
+            14vw,
+            105px
+          );
+
           font-weight: 400;
           line-height: .9;
         }
 
-        .hero h1 em {
+        .cover-content h1 em {
           font-style: italic;
         }
 
-        .location {
-          margin: 24px 0 0;
-          font-family:
-            var(--font-dm-sans),
-            sans-serif;
-          font-size: 10px;
-          letter-spacing: .28em;
+        .cover-line {
+          width: 65px;
+          height: 1px;
+          margin: 30px auto 20px;
+
+          background: rgba(255,255,255,.7);
         }
 
-        .scroll {
-          display: block;
-          margin-top: 80px;
-          font-family:
-            var(--font-dm-sans),
-            sans-serif;
-          font-size: 9px;
-          letter-spacing: .25em;
-        }
+        .save-title {
+          margin: 0;
 
-        .section {
-          padding: 110px 24px;
-        }
-
-        .ivory {
-          background: #f5f1e8;
-        }
-
-        .olive {
-          background: #59634a;
-        }
-
-        .centered {
-          text-align: center;
-        }
-
-        .narrow {
-          width: min(100%, 720px);
-          margin: 0 auto;
-        }
-
-        .section h2 {
-          margin: 0 0 22px;
           font-family:
             var(--font-cormorant),
             Georgia,
             serif;
-          font-size: clamp(42px, 8vw, 70px);
-          font-weight: 400;
-          line-height: .95;
+
+          font-size: 19px;
+          letter-spacing: .3em;
         }
 
-        .section p {
+        .follow-button {
+          position: absolute;
+          z-index: 5;
+          bottom: 7vh;
+          left: 50%;
+          transform: translateX(-50%);
+
+          border: 0;
+          padding: 8px 14px;
+
+          background: transparent;
+          color: white;
+
           font-family:
-            var(--font-dm-sans),
-            sans-serif;
-          font-size: 14px;
-          line-height: 1.8;
-          color: #58564d;
+            var(--font-parfumerie),
+            cursive;
+
+          font-size: 22px;
+          cursor: pointer;
         }
 
-        .olive-text {
-          color: #59634a;
+        .follow-button::after {
+          content: '';
+          display: block;
+
+          width: 100%;
+          height: 1px;
+          margin-top: 3px;
+
+          background: rgba(255,255,255,.65);
         }
 
-        .burgundy-text {
-          color: #572932;
+        /* =====================================================
+           SAVE THE DATE
+        ===================================================== */
+
+        .date-slide {
+          min-height: 100svh;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          background: var(--ivory);
+          text-align: center;
         }
 
-        .light-text {
-          color: #f5f1e8;
-        }
+        .top-label {
+          padding-top: 8vh;
 
-        .light-text p {
-          color: rgba(245,241,232,.85);
-        }
-
-        .date {
-          margin: 30px 0 8px !important;
           font-family:
             var(--font-cormorant),
             Georgia,
-            serif !important;
-          font-size: 28px !important;
-          letter-spacing: .12em;
+            serif;
+
+          font-size: 15px;
+          letter-spacing: .28em;
+          color: var(--burgundy);
         }
 
-        .smallcaps {
-          font-size: 9px !important;
-          letter-spacing: .22em;
+        .date-content {
+          width: min(90%, 650px);
+          padding: 8vh 0 5vh;
+        }
+
+        .eyebrow {
+          margin: 0 0 15px;
+
+          font-family:
+            var(--font-cormorant),
+            Georgia,
+            serif;
+
+          font-size: 16px;
+          letter-spacing: .2em;
+          text-transform: uppercase;
+          color: var(--burgundy);
+        }
+
+        .date-content h2,
+        .story-header h2,
+        .rsvp-content h2,
+        .confirmed-content h2 {
+          margin: 0;
+
+          font-family:
+            var(--font-cormorant),
+            Georgia,
+            serif;
+
+          font-weight: 400;
+          font-size: clamp(
+            42px,
+            10vw,
+            72px
+          );
+
+          line-height: .95;
+        }
+
+        .calendar-date {
+          margin: 38px auto 18px;
+
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .calendar-date span {
+          font-family:
+            var(--font-cormorant),
+            Georgia,
+            serif;
+
+          font-size: 16px;
+          letter-spacing: .25em;
+        }
+
+        .calendar-date strong {
+          margin: 5px 0;
+
+          font-family:
+            var(--font-cormorant),
+            Georgia,
+            serif;
+
+          font-size: 92px;
+          line-height: .8;
+          font-weight: 400;
+
+          color: var(--burgundy);
+        }
+
+        .location {
+          margin: 0;
+
+          font-family:
+            var(--font-cormorant),
+            Georgia,
+            serif;
+
+          font-size: 17px;
+          letter-spacing: .25em;
         }
 
         .countdown {
           display: flex;
           justify-content: center;
-          gap: clamp(16px, 5vw, 45px);
-          margin: 42px 0;
+          gap: clamp(
+            18px,
+            6vw,
+            50px
+          );
+
+          margin: 35px 0;
         }
 
-        .time {
+        .countdown div {
           display: flex;
           flex-direction: column;
-          gap: 5px;
+          align-items: center;
         }
 
-        .time strong {
+        .countdown strong {
           font-family:
             var(--font-cormorant),
             Georgia,
             serif;
-          font-size: 34px;
+
+          font-size: 31px;
           font-weight: 400;
+
+          color: var(--deep);
         }
 
-        .time span {
+        .countdown span {
+          margin-top: 4px;
+
           font-family:
-            var(--font-dm-sans),
-            sans-serif;
+            var(--font-cormorant),
+            Georgia,
+            serif;
+
           font-size: 8px;
           letter-spacing: .16em;
         }
 
-        .outline-btn,
-        .primary-btn {
-          border: 1px solid #572932;
+        .outline-button {
+          border: 1px solid var(--burgundy);
           background: transparent;
-          color: #572932;
-          padding: 15px 25px;
-          font-family:
-            var(--font-dm-sans),
-            sans-serif;
-          font-size: 9px;
-          letter-spacing: .18em;
-          cursor: pointer;
-        }
+          color: var(--burgundy);
 
-        .primary-btn {
-          background: #572932;
-          color: white;
-        }
+          padding: 13px 20px;
 
-        .split {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          padding: 0;
-        }
-
-        .image-card {
-          min-height: 650px;
-          position: relative;
-          display: flex;
-          align-items: flex-end;
-          padding: 35px;
-          background:
-            linear-gradient(
-              135deg,
-              #c7bba6,
-              #e4ddce
-            );
-        }
-
-        .image-card span {
-          color: white;
           font-family:
             var(--font-cormorant),
             Georgia,
             serif;
-          font-size: 34px;
+
+          font-size: 13px;
+          letter-spacing: .13em;
+
+          cursor: pointer;
         }
 
-        .copy-card {
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          padding: clamp(50px, 8vw, 110px);
-          background: #eee9dc;
-        }
+        .cartagena-strip {
+          width: 100%;
+          height: 30vh;
+          min-height: 190px;
 
-        .copy-card h2 {
-          font-size: clamp(38px, 5vw, 62px);
-        }
-
-        .script {
-          font-family:
-            var(--font-cormorant),
-            Georgia,
-            serif !important;
-          font-size: 30px !important;
-          font-style: italic;
-          color: #572932 !important;
-        }
-
-        .photo-grid {
           display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 16px;
-          margin: 50px 0;
+          grid-template-columns:
+            1fr 1.25fr 1fr;
+
+          gap: 4px;
+
+          margin-top: auto;
         }
 
-        .photo-placeholder {
-          aspect-ratio: 4 / 5;
+        .cartagena-photo {
+          position: relative;
+          overflow: hidden;
+        }
+
+        /*
+          Estas tres áreas quedan preparadas para las
+          fotos reales de Cartagena.
+        */
+
+        .cartagena-photo::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+        }
+
+        .photo-one::before {
           background:
             linear-gradient(
               145deg,
-              #cfc7b7,
-              #aaa18f
+              #817761,
+              #c5b59a
             );
         }
 
-        .photo-two {
-          transform: translateY(35px);
+        .photo-two::before {
+          background:
+            linear-gradient(
+              145deg,
+              #a58a6d,
+              #dfcdb1
+            );
         }
 
-        .quote {
+        .photo-three::before {
+          background:
+            linear-gradient(
+              145deg,
+              #59634a,
+              #b6a88f
+            );
+        }
+
+        /* =====================================================
+           HISTORIA
+        ===================================================== */
+
+        .story-slide {
+          background: var(--paper);
+          padding: 10vh 7vw;
+          text-align: center;
+        }
+
+        .story-header {
+          max-width: 680px;
+          margin: 0 auto;
+        }
+
+        .story-text {
+          max-width: 560px;
+          margin: 25px auto 0;
+
+          font-family:
+            var(--font-dm-sans),
+            sans-serif;
+
+          font-size: 14px;
+          line-height: 1.8;
+          color: var(--muted);
+        }
+
+        .story-photos {
+          max-width: 700px;
+          margin: 55px auto 45px;
+
+          display: grid;
+          grid-template-columns: 1.2fr .8fr;
+          gap: 14px;
+
+          align-items: end;
+        }
+
+        .couple-photo {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+        }
+
+        .story-photo.large {
+          height: 420px;
+        }
+
+        .story-photo.small {
+          height: 330px;
+        }
+
+        .couple-placeholder {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+
+          background:
+            linear-gradient(
+              145deg,
+              #c6bca9,
+              #8c8779
+            );
+
+          color: rgba(255,255,255,.9);
+        }
+
+        .couple-placeholder span {
           font-family:
             var(--font-cormorant),
             Georgia,
-            serif !important;
-          font-size: 27px !important;
+            serif;
+
+          font-size: 55px;
           font-style: italic;
-          color: #572932 !important;
+        }
+
+        .story-quote {
+          margin: 0;
+
+          font-family:
+            var(--font-parfumerie),
+            cursive;
+
+          font-size: 28px;
+          color: var(--burgundy);
+        }
+
+        /* =====================================================
+           DRESS CODE
+        ===================================================== */
+
+        .dress-slide {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+
+          background: var(--olive);
+          color: var(--ivory);
+
+          text-align: center;
+        }
+
+        .dress-content {
+          width: min(90%, 700px);
+        }
+
+        .eyebrow.light {
+          color: var(--ivory);
+        }
+
+        .dress-content h2 {
+          margin: 0;
+
+          font-family:
+            var(--font-cormorant),
+            Georgia,
+            serif;
+
+          font-size: clamp(
+            55px,
+            13vw,
+            90px
+          );
+
+          font-weight: 400;
         }
 
         .dress-grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
-          gap: 60px;
-          margin: 55px 0;
+          gap: 50px;
+
+          margin: 60px 0;
         }
 
-        .dress-icon {
-          font-size: 30px;
-          margin-bottom: 10px;
+        .dress-symbol {
+          font-size: 28px;
         }
 
-        .dress-grid h3 {
-          margin: 0 0 8px;
+        .dress-column h3 {
+          margin: 10px 0;
+
           font-family:
             var(--font-cormorant),
             Georgia,
             serif;
+
           font-size: 34px;
           font-weight: 400;
         }
 
-        .dress-grid p {
-          font-size: 12px !important;
-        }
+        .dress-column p {
+          margin: 0;
 
-        .notice {
-          border-top: 1px solid rgba(245,241,232,.35);
-          border-bottom: 1px solid rgba(245,241,232,.35);
-          padding: 20px 10px;
           font-family:
             var(--font-dm-sans),
             sans-serif;
-          font-size: 9px;
-          letter-spacing: .18em;
+
+          font-size: 12px;
           line-height: 1.8;
+
+          color: rgba(245,241,232,.8);
         }
 
-        .rsvp-deadline {
-          margin-bottom: 40px;
-        }
+        .white-note {
+          padding: 18px;
 
-        .rsvp {
-          max-width: 500px;
-          margin: 0 auto;
-          text-align: left;
-        }
+          border-top: 1px solid
+            rgba(245,241,232,.3);
 
-        .rsvp label > span {
-          display: block;
-          margin-bottom: 8px;
+          border-bottom: 1px solid
+            rgba(245,241,232,.3);
+
           font-family:
             var(--font-dm-sans),
             sans-serif;
+
           font-size: 9px;
-          letter-spacing: .15em;
-          text-transform: uppercase;
-        }
-
-        .rsvp input[type="text"],
-        .rsvp input:not([type]) {
-          width: 100%;
-          border: 0;
-          border-bottom: 1px solid #aaa294;
-          background: transparent;
-          padding: 14px 2px;
-          outline: none;
-        }
-
-        .choices {
-          display: grid;
-          gap: 10px;
-          margin: 30px 0;
-        }
-
-        .choice {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          border: 1px solid #d3cbbd;
-          padding: 15px;
-          cursor: pointer;
-        }
-
-        .choice.selected {
-          border-color: #572932;
-          background: rgba(87,41,50,.06);
-        }
-
-        .choice input {
-          accent-color: #572932;
-        }
-
-        .choice span {
-          margin: 0 !important;
-          font-size: 9px !important;
-        }
-
-        .success {
-          padding: 50px 20px;
-        }
-
-        .success > span {
-          color: #572932;
-          font-size: 25px;
-        }
-
-        .success h3 {
-          font-family:
-            var(--font-cormorant),
-            Georgia,
-            serif;
-          font-size: 38px;
-          font-weight: 400;
-        }
-
-        .footer {
-          padding: 60px 24px;
-          background: #572932;
-          color: #f5f1e8;
-          text-align: center;
-        }
-
-        .footer > span {
-          font-family:
-            var(--font-cormorant),
-            Georgia,
-            serif;
-          font-size: 40px;
-          font-style: italic;
-        }
-
-        .footer p {
-          margin: 15px 0 0;
-          font-family:
-            var(--font-dm-sans),
-            sans-serif;
-          font-size: 8px;
+          line-height: 1.8;
           letter-spacing: .2em;
         }
 
-        @media (max-width: 760px) {
-          .nav {
-            padding: 18px;
+        /* =====================================================
+           RSVP
+        ===================================================== */
+
+        .rsvp-slide {
+          background: var(--ivory);
+
+          display: flex;
+          align-items: center;
+          justify-content: center;
+
+          text-align: center;
+          padding: 10vh 24px;
+        }
+
+        .rsvp-content {
+          width: min(100%, 560px);
+        }
+
+        .burgundy {
+          color: var(--burgundy);
+        }
+
+        .rsvp-intro {
+          margin: 28px auto 40px;
+          max-width: 440px;
+
+          font-family:
+            var(--font-dm-sans),
+            sans-serif;
+
+          font-size: 14px;
+          line-height: 1.8;
+
+          color: var(--muted);
+        }
+
+        .name-form {
+          text-align: left;
+        }
+
+        .name-form label {
+          display: block;
+
+          margin-bottom: 8px;
+
+          font-family:
+            var(--font-cormorant),
+            Georgia,
+            serif;
+
+          font-size: 13px;
+          letter-spacing: .14em;
+          color: var(--burgundy);
+        }
+
+        .name-form input {
+          width: 100%;
+
+          border: 0;
+          border-bottom: 1px solid
+            rgba(62,71,52,.35);
+
+          background: transparent;
+
+          padding: 14px 2px;
+
+          outline: none;
+
+          font-family:
+            var(--font-cormorant),
+            Georgia,
+            serif;
+
+          font-size: 21px;
+
+          color: var(--ink);
+        }
+
+        .name-form input:focus {
+          border-color: var(--burgundy);
+        }
+
+        .primary-button {
+          width: 100%;
+
+          margin-top: 28px;
+
+          border: 1px solid var(--burgundy);
+
+          background: var(--burgundy);
+          color: white;
+
+          padding: 16px;
+
+          font-family:
+            var(--font-cormorant),
+            Georgia,
+            serif;
+
+          font-size: 13px;
+          letter-spacing: .16em;
+
+          cursor: pointer;
+        }
+
+        .guest-error {
+          margin: 12px 0 0;
+
+          font-family:
+            var(--font-dm-sans),
+            sans-serif;
+
+          font-size: 12px;
+          line-height: 1.5;
+
+          color: var(--burgundy);
+        }
+
+        .guest-found {
+          margin-top: 25px;
+          padding: 25px;
+
+          border: 1px solid
+            rgba(87,41,50,.2);
+
+          background: rgba(87,41,50,.035);
+
+          text-align: center;
+        }
+
+        .check {
+          width: 34px;
+          height: 34px;
+
+          margin: 0 auto 10px;
+
+          border-radius: 50%;
+
+          display: flex;
+          align-items: center;
+          justify-content: center;
+
+          background: var(--olive);
+          color: white;
+        }
+
+        .guest-found p {
+          margin: 0 0 4px;
+
+          font-family:
+            var(--font-dm-sans),
+            sans-serif;
+
+          font-size: 11px;
+          color: var(--muted);
+        }
+
+        .guest-found strong {
+          font-family:
+            var(--font-cormorant),
+            Georgia,
+            serif;
+
+          font-size: 27px;
+          font-weight: 400;
+        }
+
+        /* =====================================================
+           CONFIRMACIÓN OCULTA
+        ===================================================== */
+
+        .confirmed-slide {
+          background: var(--burgundy);
+
+          display: flex;
+          align-items: center;
+          justify-content: center;
+
+          color: var(--ivory);
+          text-align: center;
+        }
+
+        .confirmed-content {
+          width: min(90%, 600px);
+        }
+
+        .confirmed-heart {
+          display: block;
+
+          margin-bottom: 30px;
+
+          font-size: 28px;
+        }
+
+        .confirmed-content .eyebrow {
+          color: var(--ivory);
+        }
+
+        .confirmed-content h2 {
+          color: var(--ivory);
+        }
+
+        .confirmed-line {
+          width: 55px;
+          height: 1px;
+
+          margin: 30px auto;
+
+          background: rgba(245,241,232,.5);
+        }
+
+        .confirmed-seats {
+          margin: 0;
+
+          font-family:
+            var(--font-dm-sans),
+            sans-serif;
+
+          font-size: 9px;
+          letter-spacing: .25em;
+        }
+
+        .seat-number {
+          display: block;
+
+          margin-top: 5px;
+
+          font-family:
+            var(--font-cormorant),
+            Georgia,
+            serif;
+
+          font-size: 80px;
+          font-weight: 400;
+        }
+
+        .confirmed-message {
+          margin-top: 25px;
+
+          font-family:
+            var(--font-parfumerie),
+            cursive;
+
+          font-size: 29px;
+        }
+
+        /* =====================================================
+           NAVEGACIÓN
+        ===================================================== */
+
+        .next-arrow {
+          position: absolute;
+          z-index: 20;
+
+          left: 50%;
+          bottom: 25px;
+
+          transform: translateX(-50%);
+
+          border: 0;
+          background: transparent;
+
+          color: var(--burgundy);
+
+          font-size: 24px;
+
+          cursor: pointer;
+
+          animation: arrowFloat 2s ease-in-out infinite;
+        }
+
+        .next-arrow.dark {
+          color: var(--burgundy);
+        }
+
+        .light-arrow {
+          color: var(--ivory);
+        }
+
+        .back-button {
+          position: fixed;
+          z-index: 100;
+
+          top: 20px;
+          left: 18px;
+
+          width: 35px;
+          height: 35px;
+
+          border: 1px solid
+            rgba(87,41,50,.25);
+
+          border-radius: 50%;
+
+          background: rgba(245,241,232,.7);
+
+          color: var(--burgundy);
+
+          cursor: pointer;
+        }
+
+        @keyframes arrowFloat {
+          0%,
+          100% {
+            transform:
+              translateX(-50%)
+              translateY(0);
           }
 
-          .nav-links {
-            display: none;
+          50% {
+            transform:
+              translateX(-50%)
+              translateY(5px);
+          }
+        }
+
+        /* =====================================================
+           MÓVIL
+        ===================================================== */
+
+        @media (max-width: 600px) {
+
+          .cover-content h1 {
+            font-size: 59px;
           }
 
-          .section {
-            padding: 85px 22px;
+          .cover-small {
+            font-size: 15px;
           }
 
-          .split {
-            grid-template-columns: 1fr;
+          .save-title {
+            font-size: 16px;
           }
 
-          .image-card {
-            min-height: 480px;
+          .date-content {
+            padding-top: 6vh;
           }
 
-          .copy-card {
-            padding: 75px 28px;
+          .calendar-date strong {
+            font-size: 82px;
+          }
+
+          .cartagena-strip {
+            height: 25vh;
+            min-height: 160px;
+          }
+
+          .story-slide {
+            padding: 9vh 22px;
+          }
+
+          .story-photos {
+            margin-top: 40px;
+            grid-template-columns: 1.1fr .9fr;
+          }
+
+          .story-photo.large {
+            height: 310px;
+          }
+
+          .story-photo.small {
+            height: 250px;
           }
 
           .dress-grid {
-            gap: 25px;
+            gap: 18px;
+            margin: 45px 0;
           }
 
-          .photo-grid {
-            gap: 10px;
+          .dress-column h3 {
+            font-size: 28px;
           }
 
-          .hero h1 {
-            font-size: 56px;
+          .follow-button {
+            bottom: 6vh;
           }
         }
+
+        @media (max-width: 380px) {
+
+          .cover-content h1 {
+            font-size: 51px;
+          }
+
+          .calendar-date strong {
+            font-size: 70px;
+          }
+
+          .countdown {
+            gap: 13px;
+          }
+
+          .countdown strong {
+            font-size: 26px;
+          }
+
+          .countdown span {
+            font-size: 7px;
+          }
+        }
+
       `}</style>
-    </>
+    </main>
   );
 }
