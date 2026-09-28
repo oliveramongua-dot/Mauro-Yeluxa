@@ -1630,4 +1630,451 @@ export default function Home() {
 
           font-size: 1rem;
           font-style: italic;
-       
+        }
+
+
+        .dress-note {
+          max-width: 650px;
+
+          margin:
+            1.8rem auto 0;
+
+          padding: 1rem;
+
+          border-top:
+            1px solid rgba(255,255,255,.4);
+
+          border-bottom:
+            1px solid rgba(255,255,255,.4);
+
+          letter-spacing: .18em;
+
+          font-size: .62rem;
+        }
+
+
+        .pinterest-link {
+          display: grid;
+          place-items: center;
+
+          margin:
+            1rem auto 0;
+
+          width: 45px;
+          height: 45px;
+
+          border:
+            1px solid rgba(255,255,255,.6);
+
+          border-radius: 50%;
+
+          color: var(--white);
+
+          text-decoration: none;
+
+          font-size: 1.7rem;
+        }
+
+
+        /* RSVP */
+
+        .rsvp-section {
+          background: var(--wine-dark);
+          color: var(--white);
+        }
+
+
+        .paper-texture.wine {
+          background: var(--wine-dark);
+        }
+
+
+        .paper-texture.wine .brush-a {
+          width: 480px;
+          height: 180px;
+
+          top: -55px;
+          left: -120px;
+
+          background:
+            rgba(255,218,207,.22);
+
+          transform: rotate(-20deg);
+        }
+
+
+        .paper-texture.wine .brush-b {
+          width: 520px;
+          height: 190px;
+
+          right: -180px;
+          bottom: -45px;
+
+          background:
+            rgba(255,218,207,.22);
+
+          transform: rotate(-18deg);
+        }
+
+
+        .rsvp-heading {
+          display: flex;
+          flex-direction: column;
+
+          margin:
+            .4rem 0 1rem;
+
+          font-size:
+            clamp(2rem, 8vw, 3.5rem);
+
+          line-height: .8;
+
+          letter-spacing: .12em;
+          font-weight: 400;
+        }
+
+
+        .rsvp-heading .script {
+          margin-top: .4rem;
+
+          font-size:
+            clamp(5rem, 20vw, 9rem);
+
+          line-height: .7;
+
+          letter-spacing: 0;
+        }
+
+
+        .rsvp-intro {
+          max-width: 500px;
+
+          margin:
+            1.8rem auto 2.4rem;
+
+          color:
+            rgba(255,253,248,.92);
+
+          font-size: 1.15rem;
+          line-height: 1.4;
+        }
+
+
+        .rsvp-form {
+          width:
+            min(100%, 650px);
+
+          margin: auto;
+
+          display: grid;
+
+          gap: .8rem;
+
+          text-align: left;
+        }
+
+
+        .rsvp-form label {
+          font-size: .64rem;
+          letter-spacing: .22em;
+        }
+
+
+        .rsvp-form input {
+          width: 100%;
+
+          background:
+            rgba(255,253,248,.92);
+
+          border: 0;
+
+          border-radius: 18px;
+
+          padding:
+            1.05rem 1.2rem;
+
+          color: var(--ink);
+
+          outline: none;
+        }
+
+
+        .rsvp-form input::placeholder {
+          color: #8a817b;
+          font-style: italic;
+        }
+
+
+        .submit-button {
+          width:
+            min(100%, 380px);
+
+          justify-self: center;
+
+          margin-top: 1rem;
+
+          min-height: 58px;
+
+          border: 0;
+
+          border-radius: 999px;
+
+          background: var(--white);
+
+          color: var(--wine-dark);
+
+          letter-spacing: .15em;
+
+          font-size: .66rem;
+
+          cursor: pointer;
+        }
+
+
+        .submit-button:disabled {
+          opacity: .55;
+        }
+
+
+        .form-error {
+          color: #ffd9d3;
+
+          font-size: .9rem;
+
+          margin: 0;
+
+          text-align: center;
+        }
+
+
+        /* CONFIRMACIÓN */
+
+        .confirmation-section {
+          background: var(--paper);
+          color: var(--wine);
+        }
+
+
+        .confirmation-title {
+          margin:
+            .3rem 0 .5rem;
+
+          font-size:
+            clamp(4rem, 17vw, 7rem);
+
+          line-height: .75;
+        }
+
+
+        .confirmation-subtitle {
+          max-width: 500px;
+
+          margin:
+            .8rem auto 1.5rem;
+
+          font-size: .68rem;
+
+          letter-spacing: .22em;
+        }
+
+
+        .confirmation-postcard {
+          position: relative;
+
+          width:
+            min(100%, 700px);
+
+          margin: auto;
+
+          overflow: hidden;
+
+          clip-path:
+            polygon(
+              2% 1%,
+              98% 0,
+              100% 95%,
+              96% 100%,
+              3% 98%,
+              0 5%
+            );
+        }
+
+
+        .confirmation-postcard img {
+          width: 100%;
+          display: block;
+        }
+
+
+        .postcard-copy {
+          position: absolute;
+
+          left: 0;
+          right: 0;
+          bottom: 6%;
+
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+
+          color: var(--wine);
+
+          text-shadow:
+            0 1px 8px rgba(255,255,255,.8);
+        }
+
+
+        .postcard-copy span {
+          font-size: .8rem;
+          letter-spacing: .25em;
+        }
+
+
+        .postcard-copy small {
+          margin-top: .4rem;
+
+          font-size: .62rem;
+          letter-spacing: .2em;
+        }
+
+
+        .confirmation-seats {
+          width:
+            min(100%, 620px);
+
+          margin:
+            1.5rem auto 0;
+
+          padding: 1rem;
+
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: .8rem;
+
+          border:
+            1px solid rgba(103,40,50,.45);
+
+          border-radius: 20px;
+
+          font-size: .72rem;
+          letter-spacing: .17em;
+        }
+
+
+        .confirmation-seats strong {
+          font-size: 2.8rem;
+          font-weight: 400;
+          letter-spacing: 0;
+        }
+
+
+        .confirmation-message {
+          margin:
+            1rem 0 0;
+
+          font-size: 1.15rem;
+
+          font-style: italic;
+        }
+
+
+        /* FOOTER */
+
+        .footer {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+
+          gap: .5rem;
+
+          padding:
+            3rem 1rem 4rem;
+
+          background: var(--paper);
+
+          color: var(--wine);
+
+          text-align: center;
+        }
+
+
+        .footer .script {
+          font-size: 3.2rem;
+        }
+
+
+        .footer small {
+          font-size: .54rem;
+          letter-spacing: .18em;
+        }
+
+
+        .photo-fallback {
+          width: 100%;
+          height: 100%;
+          background:
+            linear-gradient(
+              135deg,
+              #e6ddce,
+              #cfc5b4
+            );
+        }
+
+
+        @media (min-width: 700px) {
+
+          .section {
+            padding-inline: 3rem;
+          }
+
+          .cartagena-strip {
+            margin-left: -3rem;
+            margin-right: -3rem;
+          }
+
+          .cover-watercolor {
+            inset:
+              8vh 12vw 10vh;
+          }
+        }
+
+
+        @media (max-width: 430px) {
+
+          .cover-watercolor {
+            inset:
+              13vh 5vw 15vh;
+          }
+
+          .cartagena-strip {
+            height: 23vh;
+          }
+
+          .model-brush {
+            min-height: 310px;
+          }
+
+          .model-silhouette {
+            width: 82%;
+          }
+
+          .confirmation-seats {
+            flex-direction: column;
+            gap: .2rem;
+          }
+        }
+
+
+        @media (prefers-reduced-motion: reduce) {
+
+          html {
+            scroll-behavior: auto;
+          }
+        }
+
+      `}</style>
+
+    </main>
+  );
+}
