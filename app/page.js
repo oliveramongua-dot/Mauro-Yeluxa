@@ -6,7 +6,7 @@ const WEDDING_DATE = new Date("2027-03-06T16:00:00-05:00");
 
 const SLIDES = {
   cover: "/portada.jpg",
-  date: "/fecha.jpg",
+  date: "/fecha.png",
   story: "/historia.png",
   dress: "/dress-code.png",
   rsvp: "/rsvp.png",
@@ -86,7 +86,7 @@ export default function Home() {
         behavior: "smooth",
         block: "start",
       });
-    }, 50);
+    }, 80);
   }
 
   async function submitRsvp(event) {
@@ -134,7 +134,7 @@ export default function Home() {
             behavior: "smooth",
             block: "start",
           });
-      }, 100);
+      }, 150);
     } catch {
       setRsvpState("error");
       setRsvpError(
@@ -145,13 +145,35 @@ export default function Home() {
 
   return (
     <main className="site">
+
+      {/* =========================
+          PORTADA
+      ========================== */}
+
       {!started && (
         <section className="cover">
+
           <img
-            className="slide-image"
+            className="slide-image cover-image"
             src={SLIDES.cover}
-            alt="Mauro y Yeluxa — Nuestra boda"
+            alt="Mauro y Yeluxa"
           />
+
+          <div className="cover-text">
+
+            <div className="cover-eyebrow">
+              NOS CASAMOS
+            </div>
+
+            <h1 className="cover-names">
+              Mauro &amp; Yeluxa
+            </h1>
+
+            <div className="cover-save">
+              SAVE THE DATE
+            </div>
+
+          </div>
 
           <button
             className="enter-button"
@@ -160,10 +182,16 @@ export default function Home() {
           >
             …
           </button>
+
         </section>
       )}
 
       <div className={started ? "invitation visible" : "invitation"}>
+
+        {/* =========================
+            FECHA
+        ========================== */}
+
         <Slide
           id="date-slide"
           src={SLIDES.date}
@@ -171,6 +199,7 @@ export default function Home() {
           className="date-slide"
         >
           <div className="date-overlay">
+
             <Countdown />
 
             <a
@@ -181,12 +210,31 @@ export default function Home() {
             >
               AÑADIR A MI CALENDARIO
             </a>
+
           </div>
         </Slide>
 
-        <Slide src={SLIDES.story} alt="Nuestra historia" />
+        {/* =========================
+            HISTORIA
+        ========================== */}
 
-        <Slide src={SLIDES.dress} alt="Dress code — Formal" />
+        <Slide
+          src={SLIDES.story}
+          alt="Nuestra historia"
+        />
+
+        {/* =========================
+            DRESS CODE
+        ========================== */}
+
+        <Slide
+          src={SLIDES.dress}
+          alt="Dress code — Formal"
+        />
+
+        {/* =========================
+            RSVP
+        ========================== */}
 
         <Slide
           id="rsvp-slide"
@@ -195,8 +243,15 @@ export default function Home() {
           className="rsvp-slide"
         >
           <div className="rsvp-overlay">
-            <form className="rsvp-form" onSubmit={submitRsvp}>
-              <label htmlFor="guest-name">NOMBRE COMPLETO</label>
+
+            <form
+              className="rsvp-form"
+              onSubmit={submitRsvp}
+            >
+
+              <label htmlFor="guest-name">
+                NOMBRE COMPLETO
+              </label>
 
               <input
                 id="guest-name"
@@ -211,7 +266,9 @@ export default function Home() {
               />
 
               {rsvpError && (
-                <p className="rsvp-error">{rsvpError}</p>
+                <p className="rsvp-error">
+                  {rsvpError}
+                </p>
               )}
 
               <button
@@ -222,9 +279,15 @@ export default function Home() {
                   ? "VERIFICANDO…"
                   : "CONFIRMAR"}
               </button>
+
             </form>
+
           </div>
         </Slide>
+
+        {/* =========================
+            CONFIRMACIÓN
+        ========================== */}
 
         {rsvpState === "success" && (
           <Slide
@@ -234,15 +297,19 @@ export default function Home() {
             className="confirmation-slide"
           >
             <div className="confirmation-overlay">
+
               <div className="confirmed-seats">
                 CUPOS CONFIRMADOS: {confirmedSeats}
               </div>
+
             </div>
           </Slide>
         )}
+
       </div>
 
       <style jsx global>{`
+
         * {
           box-sizing: border-box;
         }
@@ -253,7 +320,7 @@ export default function Home() {
 
         body {
           margin: 0;
-          background: #f8f6f0;
+          background: #f5f1e8;
         }
 
         button,
@@ -265,8 +332,12 @@ export default function Home() {
           width: 100%;
           min-height: 100vh;
           overflow-x: hidden;
-          background: #f8f6f0;
+          background: #f5f1e8;
         }
+
+        /* =========================
+           SLIDES
+        ========================== */
 
         .cover,
         .slide {
@@ -274,7 +345,7 @@ export default function Home() {
           width: 100%;
           min-height: 100svh;
           overflow: hidden;
-          background: #f8f6f0;
+          background: #f5f1e8;
         }
 
         .slide-image {
@@ -285,21 +356,89 @@ export default function Home() {
           object-position: center;
         }
 
+        /* =========================
+           PORTADA
+        ========================== */
+
+        .cover {
+          position: relative;
+        }
+
+        .cover-image {
+          position: absolute;
+          inset: 0;
+          z-index: 1;
+        }
+
+        .cover-text {
+          position: absolute;
+          z-index: 3;
+          top: 7%;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 90%;
+          text-align: center;
+          pointer-events: none;
+        }
+
+        .cover-eyebrow {
+          font-family: "Cormorant Garamond", Georgia, serif;
+          font-size: clamp(16px, 4.5vw, 25px);
+          letter-spacing: 0.25em;
+          color: #4d3b32;
+          margin-bottom: 16px;
+        }
+
+        .cover-names {
+          margin: 0;
+          font-family:
+            "Slight Script",
+            "Brittany Signature",
+            "Allura",
+            "Great Vibes",
+            cursive;
+          font-weight: 400;
+          font-size: clamp(46px, 13vw, 86px);
+          line-height: 0.95;
+          color: #5d3038;
+          white-space: nowrap;
+        }
+
+        .cover-save {
+          margin-top: 22px;
+          font-family: Arial, sans-serif;
+          font-size: clamp(11px, 3vw, 16px);
+          letter-spacing: 0.25em;
+          color: #4d3b32;
+        }
+
         .enter-button {
           position: absolute;
+          z-index: 5;
           left: 50%;
           bottom: 7%;
           transform: translateX(-50%);
-          width: 58px;
-          height: 58px;
+
+          width: 60px;
+          height: 60px;
+
           border-radius: 50%;
-          border: 1px solid rgba(90, 50, 55, 0.35);
-          background: rgba(255, 253, 248, 0.9);
+          border: 1px solid rgba(93, 48, 56, 0.35);
+
+          background: rgba(255, 253, 248, 0.92);
+
           color: #5d3038;
           font-size: 25px;
+
           cursor: pointer;
-          box-shadow: 0 5px 20px rgba(40, 25, 20, 0.12);
+
+          box-shadow:
+            0 5px 20px rgba(40, 25, 20, 0.12);
         }
+
+        /* =========================
+           INVITACIÓN
+        ========================== */
 
         .invitation {
           display: none;
@@ -308,6 +447,10 @@ export default function Home() {
         .invitation.visible {
           display: block;
         }
+
+        /* =========================
+           CONTADOR
+        ========================== */
 
         .date-overlay,
         .rsvp-overlay,
@@ -329,18 +472,26 @@ export default function Home() {
           display: grid;
           grid-template-columns: repeat(4, 1fr);
           gap: 7px;
+
           width: min(92%, 430px);
+
           padding: 10px 12px;
+
           border-radius: 18px;
+
           background: rgba(255, 253, 248, 0.9);
+
           backdrop-filter: blur(7px);
-          box-shadow: 0 5px 25px rgba(45, 30, 25, 0.12);
+
+          box-shadow:
+            0 5px 25px rgba(45, 30, 25, 0.12);
         }
 
         .countdown > div {
           display: flex;
           flex-direction: column;
           align-items: center;
+
           color: #4f3032;
         }
 
@@ -352,6 +503,7 @@ export default function Home() {
 
         .countdown span {
           margin-top: 5px;
+
           font-family: Arial, sans-serif;
           font-size: 8px;
           letter-spacing: 0.08em;
@@ -359,61 +511,102 @@ export default function Home() {
 
         .calendar-button {
           pointer-events: auto;
+
           margin-top: 12px;
+
           padding: 11px 17px;
+
           border-radius: 999px;
+
           background: #5d3038;
+
           color: #fffdf8;
+
           text-decoration: none;
+
           font-family: Arial, sans-serif;
+
           font-size: 10px;
+
           letter-spacing: 0.08em;
         }
+
+        /* =========================
+           RSVP
+        ========================== */
 
         .rsvp-overlay {
           display: flex;
           align-items: center;
           justify-content: center;
+
           padding: 12% 11%;
         }
 
         .rsvp-form {
           width: min(90%, 390px);
+
           margin-top: 12%;
+
           padding: 22px;
+
           border-radius: 22px;
+
           background: rgba(255, 253, 248, 0.94);
-          box-shadow: 0 10px 35px rgba(40, 20, 25, 0.16);
+
+          box-shadow:
+            0 10px 35px rgba(40, 20, 25, 0.16);
+
           pointer-events: auto;
         }
 
         .rsvp-form label {
           display: block;
+
           margin-bottom: 8px;
+
           color: #5d3038;
+
           font-family: Arial, sans-serif;
+
           font-size: 10px;
+
           letter-spacing: 0.1em;
         }
 
         .rsvp-form input {
           width: 100%;
+
           padding: 13px 12px;
-          border: 1px solid rgba(93, 48, 56, 0.28);
+
+          border:
+            1px solid
+            rgba(93, 48, 56, 0.28);
+
           border-radius: 10px;
+
           outline: none;
+
           background: #fffdf8;
+
           color: #332b29;
         }
 
         .rsvp-form button {
           width: 100%;
+
           margin-top: 12px;
+
           padding: 13px;
+
           border: 0;
+
           border-radius: 999px;
+
           background: #5d3038;
+
           color: #fffdf8;
+
           cursor: pointer;
         }
 
@@ -423,10 +616,17 @@ export default function Home() {
 
         .rsvp-error {
           margin: 8px 0 0;
+
           color: #7a2430;
+
           font-family: Arial, sans-serif;
+
           font-size: 12px;
         }
+
+        /* =========================
+           CONFIRMACIÓN
+        ========================== */
 
         .confirmation-overlay {
           display: flex;
@@ -436,18 +636,29 @@ export default function Home() {
 
         .confirmed-seats {
           margin-top: 17%;
+
           padding: 13px 20px;
+
           border-radius: 14px;
+
           background: rgba(255, 253, 248, 0.93);
+
           color: #5d3038;
+
           font-family: Arial, sans-serif;
+
           font-size: 12px;
+
           letter-spacing: 0.08em;
+
           text-align: center;
-          box-shadow: 0 8px 30px rgba(40, 25, 20, 0.12);
+
+          box-shadow:
+            0 8px 30px rgba(40, 25, 20, 0.12);
         }
 
         @media (min-width: 700px) {
+
           .cover,
           .slide {
             width: min(100%, 540px);
@@ -457,7 +668,9 @@ export default function Home() {
           .site {
             background: #e9e4da;
           }
+
         }
+
       `}</style>
     </main>
   );
