@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 const WEDDING_DATE = new Date("2027-03-06T16:00:00-05:00");
 
 const SLIDES = {
-  cover: "/portada.png",
+  cover: "/portada.jpg",
   date: "/fecha.png",
   story: "/historia.png",
   dress: "/dress-code.png",
