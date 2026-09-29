@@ -6,7 +6,7 @@ const WEDDING_DATE = new Date("2027-03-06T16:00:00-05:00");
 
 const SLIDES = {
   cover: "/portada.jpg",
-  date: "/fecha.png",
+  date: "/fecha.jpg",
   story: "/historia.png",
   dress: "/dress-code.png",
   rsvp: "/rsvp.png",
