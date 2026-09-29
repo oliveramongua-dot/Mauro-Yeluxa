@@ -17,88 +17,130 @@ function Countdown() {
   const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
-    const timer = setInterval(() => setNow(Date.now()), 1000);
+    const timer = setInterval(() => {
+      setNow(Date.now());
+    }, 1000);
+
     return () => clearInterval(timer);
   }, []);
 
-  const values = useMemo(() => {
-    const diff = Math.max(0, WEDDING_DATE.getTime() - now);
-    const total = Math.floor(diff / 1000);
+  const time = useMemo(() => {
+    const difference = Math.max(
+      0,
+      WEDDING_DATE.getTime() - now
+    );
+
+    const totalSeconds = Math.floor(difference / 1000);
 
     return {
-      days: Math.floor(total / 86400),
-      hours: Math.floor((total % 86400) / 3600),
-      minutes: Math.floor((total % 3600) / 60),
-      seconds: total % 60,
+      days: Math.floor(totalSeconds / 86400),
+      hours: Math.floor((totalSeconds % 86400) / 3600),
+      minutes: Math.floor((totalSeconds % 3600) / 60),
+      seconds: totalSeconds % 60,
     };
   }, [now]);
 
+  const format = (number) =>
+    String(number).padStart(2, "0");
+
   return (
     <div className="countdown">
-      <div>
-        <strong>{String(values.days).padStart(2, "0")}</strong>
+      <div className="count-item">
+        <strong>{format(time.days)}</strong>
         <span>DÍAS</span>
       </div>
 
-      <i />
-
-      <div>
-        <strong>{String(values.hours).padStart(2, "0")}</strong>
+      <div className="count-item">
+        <strong>{format(time.hours)}</strong>
         <span>HORAS</span>
       </div>
 
-      <i />
-
-      <div>
-        <strong>{String(values.minutes).padStart(2, "0")}</strong>
+      <div className="count-item">
+        <strong>{format(time.minutes)}</strong>
         <span>MINUTOS</span>
       </div>
 
-      <i />
-
-      <div>
-        <strong>{String(values.seconds).padStart(2, "0")}</strong>
+      <div className="count-item">
+        <strong>{format(time.seconds)}</strong>
         <span>SEGUNDOS</span>
       </div>
     </div>
   );
 }
 
-function Slide({ id, image, children, className = "" }) {
+function Slide({ children, image, id, className = "" }) {
   return (
-    <section id={id} className={`slide ${className}`}>
-      <img className="background" src={image} alt="" />
-      {children}
+    <section
+      id={id}
+      className={`slide ${className}`}
+    >
+      <img
+        src={image}
+        className="slide-background"
+        alt=""
+      />
+
+      <div className="slide-content">
+        {children}
+      </div>
     </section>
   );
 }
 
 export default function Home() {
+  const [started, setStarted] = useState(false);
+
   const [name, setName] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [rsvpState, setRsvpState] = useState("idle");
+  const [rsvpError, setRsvpError] = useState("");
   const [confirmedSeats, setConfirmedSeats] = useState(null);
-  const [error, setError] = useState("");
+
+  const calendarUrl = useMemo(() => {
+    const title = encodeURIComponent(
+      "Mauro & Yeluxa — Nuestra boda"
+    );
+
+    const location = encodeURIComponent(
+      "Cartagena de Indias, Colombia"
+    );
+
+    return (
+      "https://calendar.google.com/calendar/render" +
+      "?action=TEMPLATE" +
+      `&text=${title}` +
+      "&dates=20270306T210000Z/20270307T030000Z" +
+      `&location=${location}`
+    );
+  }, []);
 
   function openInvitation() {
+    setStarted(true);
+
     setTimeout(() => {
       document
         .getElementById("date-slide")
-        ?.scrollIntoView({ behavior: "smooth" });
-    }, 100);
+        ?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+    }, 80);
   }
 
-  async function submitRsvp(e) {
-    e.preventDefault();
+  async function submitRsvp(event) {
+    event.preventDefault();
+
+    setRsvpError("");
 
     const cleanName = name.trim();
 
     if (!cleanName) {
-      setError("Por favor escribe tu nombre completo.");
+      setRsvpError(
+        "Por favor escribe tu nombre completo."
+      );
       return;
     }
 
-    setLoading(true);
-    setError("");
+    setRsvpState("loading");
 
     try {
       const response = await fetch("/api/rsvp", {
@@ -114,350 +156,338 @@ export default function Home() {
       const data = await response.json();
 
       if (!response.ok || !data.valid) {
-        setError("No encontramos ese nombre en la lista de invitados.");
-        setLoading(false);
+        setRsvpState("error");
+
+        setRsvpError(
+          data?.message ||
+            "No encontramos ese nombre en la lista de invitados."
+        );
+
         return;
       }
 
       setConfirmedSeats(data.seats);
-      setLoading(false);
+      setRsvpState("success");
 
       setTimeout(() => {
         document
           .getElementById("confirmation-slide")
-          ?.scrollIntoView({ behavior: "smooth" });
-      }, 200);
-    } catch (err) {
-      setError("No pudimos confirmar tu asistencia. Intenta nuevamente.");
-      setLoading(false);
+          ?.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+      }, 300);
+    } catch (error) {
+      setRsvpState("error");
+
+      setRsvpError(
+        "No pudimos procesar la confirmación. Inténtalo nuevamente."
+      );
     }
   }
 
-  function addToCalendar() {
-    const start = "20270306T210000Z";
-    const end = "20270307T030000Z";
-
-    const calendarUrl =
-      "https://calendar.google.com/calendar/render?action=TEMPLATE" +
-      "&text=" +
-      encodeURIComponent("Boda Mauro & Yeluxa") +
-      "&dates=" +
-      start +
-      "/" +
-      end +
-      "&details=" +
-      encodeURIComponent("Nuestra boda 💍") +
-      "&location=" +
-      encodeURIComponent("Cartagena de Indias, Colombia");
-
-    window.open(calendarUrl, "_blank");
-  }
-
   return (
-    <main className="wedding-page">
+    <main className="wedding-site">
 
-      {/* ================= PORTADA ================= */}
+      {/* =====================================================
+          PORTADA
+      ====================================================== */}
 
-      <Slide
-        id="cover-slide"
-        image={SLIDES.cover}
-        className="cover-slide"
-      >
-        <div className="cover-text">
-          <div className="eyebrow">NOS CASAMOS</div>
-
-          <h1>
-            Mauro <span>&</span> Yeluxa
-          </h1>
-
-          <div className="cover-save">SAVE THE DATE</div>
-        </div>
-
-        <button
-          className="next-button"
-          onClick={openInvitation}
-          aria-label="Abrir invitación"
-        >
-          <span>•••</span>
-        </button>
-      </Slide>
-
-
-      {/* ================= FECHA ================= */}
-
-      <Slide
-        id="date-slide"
-        image={SLIDES.date}
-        className="date-slide"
-      >
-        <div className="date-content">
-
-          <div className="section-title">
-            N U E S T R A&nbsp;&nbsp; B O D A
-          </div>
-
-          <div className="small-line" />
-
-          <h2 className="script-title">
-            Reserva
-          </h2>
-
-          <div className="subtitle">
-            E S T A&nbsp;&nbsp; F E C H A
-          </div>
-
-          <div className="small-line lower" />
-
-          <div className="date-block">
-
-            <div className="weekday">
-              S Á B A D O
-            </div>
-
-            <div className="day">
-              06
-            </div>
-
-            <div className="month">
-              M A R Z O&nbsp;&nbsp;·&nbsp;&nbsp;2 0 2 7
-            </div>
-
-          </div>
-
-          <div className="city">
-            C A R T A G E N A&nbsp;&nbsp; D E&nbsp;&nbsp; I N D I A S
-          </div>
-
-          <Countdown />
-
-          <button
-            className="calendar-button"
-            onClick={addToCalendar}
-          >
-            <span className="calendar-icon">□</span>
-            A Ñ A D I R&nbsp;&nbsp; A&nbsp;&nbsp; M I&nbsp;&nbsp; C A L E N D A R I O
-          </button>
-
-        </div>
-      </Slide>
-
-
-      {/* ================= HISTORIA ================= */}
-
-      <Slide
-        id="story-slide"
-        image={SLIDES.story}
-        className="story-slide"
-      >
-        <div className="story-content">
-
-          <div className="section-title">
-            N U E S T R A&nbsp;&nbsp; H I S T O R I A
-          </div>
-
-          <div className="small-line" />
-
-          <div className="story-quote">
-            <span>La vida es más</span>
-
-            <strong>linda</strong>
-
-            <span>cuando la</span>
-
-            <span>compartimos.</span>
-          </div>
-
-        </div>
-      </Slide>
-
-
-      {/* ================= DRESS CODE ================= */}
-
-      <Slide
-        id="dress-slide"
-        image={SLIDES.dress}
-        className="dress-slide"
-      >
-        <div className="dress-content">
-
-          <div className="dress-title">
-            D R E S S&nbsp;&nbsp; C O D E
-          </div>
-
-          <div className="dress-line" />
-
-          <h2 className="dress-script">
-            Formal
-          </h2>
-
-          <div className="dress-people">
-
-            <div className="person-column">
-              <div className="person-space" />
-
-              <div className="person-label">
-                H O M B R E S
-              </div>
-
-              <div className="person-description">
-                Traje formal
-              </div>
-            </div>
-
-            <div className="person-column">
-              <div className="person-space" />
-
-              <div className="person-label">
-                M U J E R E S
-              </div>
-
-              <div className="person-description">
-                Vestido formal largo
-              </div>
-            </div>
-
-          </div>
-
-          <div className="white-note">
-            <div className="note-line" />
-
-            E L&nbsp;&nbsp; B L A N C O&nbsp;&nbsp; E S T Á&nbsp;&nbsp; R E S E R V A D O
-            <br />
-            P A R A&nbsp;&nbsp; L O S&nbsp;&nbsp; N O V I O S
-
-            <div className="note-line bottom" />
-          </div>
-
-        </div>
-      </Slide>
-
-
-      {/* ================= RSVP ================= */}
-
-      <Slide
-        id="rsvp-slide"
-        image={SLIDES.rsvp}
-        className="rsvp-slide"
-      >
-        <form
-          className="rsvp-content"
-          onSubmit={submitRsvp}
-        >
-
-          <div className="rsvp-title">
-            C O N F I R M A
-          </div>
-
-          <div className="rsvp-line" />
-
-          <h2 className="rsvp-script">
-            Asistencia
-          </h2>
-
-          <p className="rsvp-text">
-            Será un honor
-            <br />
-            compartir este día
-            <br />
-            contigo.
-          </p>
-
-          <div className="rsvp-separator" />
-
-          <label>
-            N O M B R E&nbsp;&nbsp; C O M P L E T O
-          </label>
-
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Escribe tu nombre"
-            autoComplete="name"
+      {!started && (
+        <section className="cover">
+          <img
+            src={SLIDES.cover}
+            className="slide-background"
+            alt="Mauro & Yeluxa"
           />
 
-          {error && (
-            <div className="rsvp-error">
-              {error}
-            </div>
-          )}
-
           <button
-            type="submit"
-            className="confirm-button"
-            disabled={loading}
+            className="open-dots"
+            onClick={openInvitation}
+            aria-label="Abrir invitación"
           >
-            {loading ? "CONFIRMANDO..." : "C O N F I R M A R"}
+            •••
           </button>
+        </section>
+      )}
 
-        </form>
-      </Slide>
+      {/* =====================================================
+          INVITACIÓN
+      ====================================================== */}
 
+      <div
+        className={
+          started
+            ? "invitation invitation-visible"
+            : "invitation"
+        }
+      >
 
-      {/* ================= CONFIRMACIÓN ================= */}
+        {/* =================================================
+            FECHA
+        ================================================= */}
 
-      {confirmedSeats !== null && (
         <Slide
-          id="confirmation-slide"
-          image={SLIDES.confirmation}
-          className="confirmation-slide"
+          id="date-slide"
+          image={SLIDES.date}
+          className="date-slide"
         >
-          <div className="confirmation-content">
+          <div className="date-text">
 
-            <div className="confirmation-title">
-              ¡ G R A C I A S !
+            <div className="date-kicker">
+              NUESTRA BODA
             </div>
 
-            <div className="confirmation-line" />
-
-            <h2>
-              T U&nbsp;&nbsp; A S I S T E N C I A
-              <br />
-              H A&nbsp;&nbsp; S I D O&nbsp;&nbsp; C O N F I R M A D A
-            </h2>
-
-            <div className="seat-box">
-              <span>CUPOS CONFIRMADOS</span>
-
-              <strong>
-                {confirmedSeats}
-              </strong>
-
-              <span>
-                {confirmedSeats === 1 ? "PERSONA" : "PERSONAS"}
-              </span>
+            <div className="script-title">
+              Reserva
             </div>
 
-            <p>
-              Muy pronto te enviaremos
-              <br />
-              más detalles.
-            </p>
+            <div className="date-subtitle">
+              ESTA FECHA
+            </div>
+
+            <div className="wedding-date">
+              <div className="date-day-name">
+                SÁBADO
+              </div>
+
+              <div className="date-number">
+                06
+              </div>
+
+              <div className="date-month">
+                MARZO · 2027
+              </div>
+            </div>
+
+            <div className="date-city">
+              CARTAGENA DE INDIAS
+            </div>
+
+          </div>
+
+          <div className="date-bottom">
+
+            <Countdown />
+
+            <a
+              href={calendarUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="calendar-link"
+            >
+              AÑADIR A MI CALENDARIO
+            </a>
 
           </div>
         </Slide>
-      )}
 
+
+        {/* =================================================
+            HISTORIA
+        ================================================= */}
+
+        <Slide
+          image={SLIDES.story}
+          className="story-slide"
+        >
+          <div className="story-text">
+
+            <div className="section-kicker">
+              NUESTRA HISTORIA
+            </div>
+
+            <div className="story-quote">
+              La vida es más{" "}
+              <span className="script-inline">
+                linda
+              </span>{" "}
+              cuando la compartimos.
+            </div>
+
+          </div>
+        </Slide>
+
+
+        {/* =================================================
+            DRESS CODE
+        ================================================= */}
+
+        <Slide
+          image={SLIDES.dress}
+          className="dress-slide"
+        >
+          <div className="dress-text">
+
+            <div className="section-kicker dress-kicker">
+              DRESS CODE
+            </div>
+
+            <div className="dress-script">
+              Formal
+            </div>
+
+            <div className="dress-details">
+
+              <div className="dress-column">
+                <div className="dress-label">
+                  HOMBRES
+                </div>
+
+                <div className="dress-description">
+                  Traje formal
+                </div>
+              </div>
+
+              <div className="dress-column">
+                <div className="dress-label">
+                  MUJERES
+                </div>
+
+                <div className="dress-description">
+                  Vestido formal largo
+                </div>
+              </div>
+
+            </div>
+
+            <div className="dress-note">
+              EL BLANCO ESTÁ RESERVADO
+              <br />
+              PARA LOS NOVIOS
+            </div>
+
+            <a
+              href="#"
+              className="dress-plus"
+              aria-label="Ver inspiración de vestuario"
+              onClick={(event) => {
+                event.preventDefault();
+              }}
+            >
+              +
+            </a>
+
+          </div>
+        </Slide>
+
+
+        {/* =================================================
+            RSVP
+        ================================================= */}
+
+        <Slide
+          id="rsvp-slide"
+          image={SLIDES.rsvp}
+          className="rsvp-slide"
+        >
+          <div className="rsvp-content">
+
+            <div className="section-kicker rsvp-kicker">
+              CONFIRMA
+            </div>
+
+            <div className="rsvp-script">
+              Asistencia
+            </div>
+
+            <p className="rsvp-message">
+              Será un honor compartir
+              <br />
+              este día contigo.
+            </p>
+
+            <form
+              className="rsvp-form"
+              onSubmit={submitRsvp}
+            >
+
+              <label htmlFor="guest-name">
+                NOMBRE COMPLETO
+              </label>
+
+              <input
+                id="guest-name"
+                type="text"
+                value={name}
+                onChange={(event) => {
+                  setName(event.target.value);
+                  setRsvpState("idle");
+                  setRsvpError("");
+                }}
+                placeholder="Tu nombre"
+                autoComplete="name"
+              />
+
+              {rsvpError && (
+                <p className="rsvp-error">
+                  {rsvpError}
+                </p>
+              )}
+
+              <button
+                type="submit"
+                disabled={rsvpState === "loading"}
+                className="confirm-button"
+              >
+                {rsvpState === "loading"
+                  ? "VERIFICANDO…"
+                  : "CONFIRMAR"}
+              </button>
+
+            </form>
+
+          </div>
+        </Slide>
+
+
+        {/* =================================================
+            CONFIRMACIÓN
+        ================================================= */}
+
+        {rsvpState === "success" && (
+          <Slide
+            id="confirmation-slide"
+            image={SLIDES.confirmation}
+            className="confirmation-slide"
+          >
+            <div className="confirmation-content">
+
+              <div className="confirmation-title">
+                ¡GRACIAS!
+              </div>
+
+              <div className="confirmation-main">
+                TU ASISTENCIA HA SIDO
+                <br />
+                CONFIRMADA
+              </div>
+
+              <div className="seat-box">
+                CUPOS CONFIRMADOS:{" "}
+                <strong>
+                  {confirmedSeats}
+                </strong>
+              </div>
+
+              <div className="confirmation-message">
+                Muy pronto te enviaremos
+                <br />
+                más detalles.
+              </div>
+
+            </div>
+          </Slide>
+        )}
+
+      </div>
+
+
+      {/* =====================================================
+          ESTILOS
+      ====================================================== */}
 
       <style jsx global>{`
-
-        @import url('https://fonts.googleapis.com/css2?family=Allura&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap');
-
-        :root {
-          --wine: #64151e;
-          --wine-dark: #4d1018;
-          --paper: #f8f5ef;
-          --olive: #60764b;
-          --cream: #f7f1e8;
-
-          --serif: "Cormorant Garamond", Georgia, serif;
-
-          --script:
-            "Slight Script",
-            "Brittany Signature",
-            "Allura",
-            "Great Vibes",
-            cursive;
-        }
 
         * {
           box-sizing: border-box;
@@ -465,542 +495,864 @@ export default function Home() {
 
         html {
           scroll-behavior: smooth;
-          background: var(--paper);
+          background: #f7f3eb;
         }
 
         body {
           margin: 0;
           padding: 0;
-          background: var(--paper);
-          color: var(--wine);
-          font-family: var(--serif);
+          background: #f7f3eb;
+          color: #3e302c;
         }
 
         button,
         input {
-          font-family: inherit;
+          font: inherit;
         }
 
-        .wedding-page {
+        .wedding-site {
           width: 100%;
+          min-height: 100vh;
           overflow-x: hidden;
-          background: var(--paper);
+          background: #f7f3eb;
         }
 
+
+        /* =================================================
+           IMÁGENES
+        ================================================= */
+
+        .cover,
         .slide {
           position: relative;
           width: 100%;
-          min-height: 100svh;
+          aspect-ratio: 9 / 16;
           overflow: hidden;
-          isolation: isolate;
         }
 
-        .background {
+        .slide-background {
           position: absolute;
           inset: 0;
-          z-index: -2;
           width: 100%;
           height: 100%;
           object-fit: cover;
+          object-position: center;
           display: block;
         }
 
-        /* PORTADA */
-
-        .cover-text {
+        .slide-content {
           position: absolute;
-          top: 9%;
-          left: 50%;
-          width: 90%;
-          transform: translateX(-50%);
-          text-align: center;
-          color: var(--wine);
+          inset: 0;
+          width: 100%;
+          height: 100%;
         }
 
-        .eyebrow {
-          font-family: var(--serif);
-          font-size: clamp(13px, 3.5vw, 24px);
-          letter-spacing: .42em;
-          margin-right: -.42em;
-          font-weight: 500;
+
+        /* =================================================
+           PORTADA
+        ================================================= */
+
+        .cover {
+          background: #f7f3eb;
         }
 
-        .cover-text h1 {
-          margin: 15px 0 10px;
-          font-family: var(--script);
-          font-size: clamp(54px, 15vw, 115px);
-          font-weight: 400;
-          line-height: .9;
-          white-space: nowrap;
-        }
+        /*
+          IMPORTANTE:
+          Este botón NO tiene fondo,
+          NO tiene círculo,
+          NO tiene borde,
+          NO tiene sombra.
+        */
 
-        .cover-text h1 span {
-          font-family: var(--serif);
-          font-size: .45em;
-          font-style: italic;
-          margin: 0 5px;
-        }
-
-        .cover-save {
-          font-family: var(--serif);
-          font-size: clamp(13px, 3vw, 21px);
-          letter-spacing: .32em;
-          margin-right: -.32em;
-        }
-
-        .next-button {
+        .open-dots {
           position: absolute;
+
           left: 50%;
           bottom: 6.5%;
+
           transform: translateX(-50%);
-          width: 74px;
-          height: 74px;
-          border-radius: 50%;
-          border: 1px solid rgba(100,21,30,.35);
-          background: rgba(255,255,255,.82);
-          color: var(--wine);
-          box-shadow: 0 12px 30px rgba(70,30,20,.15);
+
+          width: auto;
+          height: auto;
+
+          padding: 0;
+          margin: 0;
+
+          border: none;
+          outline: none;
+
+          background: transparent;
+
+          color: #5a3035;
+
+          font-family:
+            Georgia,
+            "Times New Roman",
+            serif;
+
+          font-size: 22px;
+          line-height: 1;
+
+          letter-spacing: 4px;
+
           cursor: pointer;
+
+          -webkit-tap-highlight-color: transparent;
+
+          transition:
+            opacity .25s ease,
+            transform .25s ease;
         }
 
-        .next-button span {
-          font-size: 20px;
-          letter-spacing: 3px;
-          margin-left: 3px;
-        }
-
-        /* FECHA */
-
-        .date-content {
-          position: absolute;
-          top: 5%;
-          left: 50%;
-          width: 92%;
-          transform: translateX(-50%);
-          text-align: center;
-          color: var(--wine);
-        }
-
-        .section-title,
-        .dress-title,
-        .rsvp-title {
-          font-family: var(--serif);
-          font-weight: 500;
-          letter-spacing: .38em;
-          margin-right: -.38em;
-          font-size: clamp(14px, 3.5vw, 24px);
-        }
-
-        .small-line,
-        .dress-line,
-        .rsvp-line,
-        .confirmation-line {
-          width: 76px;
-          height: 1px;
-          background: currentColor;
+        .open-dots:active {
           opacity: .55;
-          margin: 17px auto 13px;
+          transform:
+            translateX(-50%)
+            scale(.94);
+        }
+
+
+        /* =================================================
+           INVITACIÓN
+        ================================================= */
+
+        .invitation {
+          display: none;
+        }
+
+        .invitation-visible {
+          display: block;
+        }
+
+
+        /* =================================================
+           TIPOGRAFÍA
+        ================================================= */
+
+        .section-kicker,
+        .date-kicker,
+        .date-subtitle,
+        .date-city,
+        .date-day-name,
+        .date-month,
+        .dress-label,
+        .dress-description,
+        .dress-note,
+        .rsvp-message,
+        .rsvp-form label,
+        .confirmation-main,
+        .confirmation-message,
+        .calendar-link,
+        .seat-box {
+
+          font-family:
+            "Cormorant Garamond",
+            Georgia,
+            "Times New Roman",
+            serif;
+        }
+
+        /*
+          Si Slight Script está instalada,
+          se utilizará primero.
+          Después se mantienen alternativas
+          elegantes de escritura.
+        */
+
+        .script-title,
+        .script-inline,
+        .dress-script,
+        .rsvp-script {
+
+          font-family:
+            "Slight Script",
+            "Brittany Signature",
+            "Allura",
+            "Great Vibes",
+            "Brush Script MT",
+            cursive;
+
+          font-weight: 400;
+        }
+
+
+        /* =================================================
+           FECHA
+        ================================================= */
+
+        .date-text {
+          position: absolute;
+
+          top: 9%;
+          left: 0;
+          right: 0;
+
+          text-align: center;
+
+          color: #4e3431;
+        }
+
+        .date-kicker {
+          font-size: clamp(
+            13px,
+            3.5vw,
+            19px
+          );
+
+          letter-spacing: .16em;
+          font-weight: 500;
         }
 
         .script-title {
-          margin: 0;
-          font-family: var(--script);
-          font-size: clamp(70px, 19vw, 145px);
-          font-weight: 400;
-          line-height: .8;
+          margin-top: 1.2%;
+
+          font-size: clamp(
+            53px,
+            14vw,
+            82px
+          );
+
+          line-height: .88;
+
+          color: #63363a;
         }
 
-        .subtitle {
-          margin-top: 2px;
-          font-family: var(--serif);
-          font-size: clamp(18px, 5vw, 32px);
-          font-weight: 600;
-          letter-spacing: .25em;
-          margin-right: -.25em;
+        .date-subtitle {
+          margin-top: 2.5%;
+
+          font-size: clamp(
+            12px,
+            3.1vw,
+            17px
+          );
+
+          letter-spacing: .19em;
         }
 
-        .lower {
-          margin-top: 20px;
+        .wedding-date {
+          margin-top: 6%;
         }
 
-        .date-block {
-          margin-top: 16px;
-        }
+        .date-day-name {
+          font-size: clamp(
+            13px,
+            3.5vw,
+            18px
+          );
 
-        .weekday {
-          font-family: var(--serif);
-          font-size: clamp(14px, 3.5vw, 22px);
-          letter-spacing: .35em;
-          margin-right: -.35em;
-        }
-
-        .day {
-          margin: -2px 0 -7px;
-          font-family: var(--serif);
-          font-size: clamp(68px, 17vw, 120px);
-          line-height: 1;
-          font-weight: 500;
-        }
-
-        .month {
-          font-family: var(--serif);
-          font-size: clamp(14px, 3.7vw, 23px);
-          letter-spacing: .25em;
-          margin-right: -.25em;
-        }
-
-        .city {
-          margin-top: 28px;
-          font-family: var(--serif);
-          font-size: clamp(14px, 3.7vw, 23px);
-          letter-spacing: .28em;
-          margin-right: -.28em;
-          font-weight: 500;
-        }
-
-        .countdown {
-          margin: 25px auto 0;
-          width: min(92%, 680px);
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          gap: clamp(9px, 3vw, 25px);
-        }
-
-        .countdown div {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          min-width: 58px;
-        }
-
-        .countdown strong {
-          font-family: var(--serif);
-          font-size: clamp(27px, 7vw, 46px);
-          line-height: 1;
-          font-weight: 500;
-        }
-
-        .countdown span {
-          margin-top: 7px;
-          font-size: clamp(8px, 2vw, 13px);
           letter-spacing: .18em;
         }
 
-        .countdown i {
-          width: 1px;
-          height: 46px;
-          background: var(--wine);
-          opacity: .45;
+        .date-number {
+          margin-top: -2%;
+
+          font-family:
+            "Cormorant Garamond",
+            Georgia,
+            serif;
+
+          font-size: clamp(
+            82px,
+            22vw,
+            132px
+          );
+
+          line-height: .9;
+
+          font-weight: 400;
+
+          color: #5a3035;
         }
 
-        .calendar-button {
-          margin-top: 25px;
-          padding: 13px 25px;
-          border: 1px solid var(--wine);
-          border-radius: 40px;
-          background: rgba(255,255,255,.35);
-          color: var(--wine);
-          font-size: clamp(9px, 2.4vw, 14px);
-          letter-spacing: .2em;
-          cursor: pointer;
+        .date-month {
+          margin-top: 1%;
+
+          font-size: clamp(
+            15px,
+            4vw,
+            21px
+          );
+
+          letter-spacing: .13em;
         }
 
-        .calendar-icon {
-          display: inline-block;
-          margin-right: 8px;
-          font-size: 15px;
+        .date-city {
+          margin-top: 4%;
+
+          font-size: clamp(
+            11px,
+            2.8vw,
+            16px
+          );
+
+          letter-spacing: .16em;
         }
 
-        /* HISTORIA */
 
-        .story-content {
+        /* =================================================
+           CONTADOR
+        ================================================= */
+
+        .date-bottom {
           position: absolute;
-          top: 5%;
-          left: 50%;
-          width: 90%;
-          transform: translateX(-50%);
-          text-align: center;
-          color: var(--wine);
-        }
 
-        .story-quote {
-          margin-top: 14px;
+          left: 7%;
+          right: 7%;
+          bottom: 6%;
+
           display: flex;
           flex-direction: column;
           align-items: center;
-          font-family: var(--serif);
-          font-style: italic;
-          font-size: clamp(23px, 6vw, 40px);
-          line-height: .95;
         }
 
-        .story-quote strong {
-          margin: -8px 0 -4px;
-          font-family: var(--script);
-          font-size: clamp(90px, 23vw, 165px);
-          line-height: .8;
-          font-weight: 400;
-          font-style: normal;
+        .countdown {
+          width: 100%;
+          max-width: 410px;
+
+          display: grid;
+          grid-template-columns:
+            repeat(4, 1fr);
+
+          gap: 2px;
+
+          color: #503532;
         }
 
-        /* DRESS CODE */
-
-        .dress-content {
-          position: absolute;
-          inset: 0;
-          color: var(--cream);
+        .count-item {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
           text-align: center;
         }
 
-        .dress-title {
-          position: absolute;
-          top: 4.5%;
-          left: 50%;
-          transform: translateX(-50%);
-          width: 90%;
+        .count-item strong {
+          font-family:
+            "Cormorant Garamond",
+            Georgia,
+            serif;
+
+          font-size: clamp(
+            21px,
+            5.5vw,
+            31px
+          );
+
+          line-height: 1;
+
+          font-weight: 500;
         }
 
-        .dress-line {
+        .count-item span {
+          margin-top: 5px;
+
+          font-family:
+            Arial,
+            sans-serif;
+
+          font-size: 7px;
+
+          letter-spacing: .09em;
+        }
+
+        .calendar-link {
+          margin-top: 13px;
+
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+
+          min-height: 34px;
+
+          padding:
+            8px 17px;
+
+          border:
+            1px solid
+            rgba(86, 48, 50, .55);
+
+          border-radius: 999px;
+
+          color: #593136;
+
+          text-decoration: none;
+
+          font-family:
+            Arial,
+            sans-serif;
+
+          font-size: 9px;
+
+          letter-spacing: .11em;
+
+          background:
+            rgba(255,255,255,.12);
+        }
+
+
+        /* =================================================
+           HISTORIA
+        ================================================= */
+
+        .story-text {
           position: absolute;
-          top: 9%;
-          left: 50%;
-          transform: translateX(-50%);
-          margin: 0;
+
+          left: 8%;
+          right: 8%;
+
+          top: 10%;
+
+          text-align: center;
+
+          color: #503432;
+        }
+
+        .story-slide .section-kicker {
+          font-size: clamp(
+            13px,
+            3.5vw,
+            19px
+          );
+
+          letter-spacing: .15em;
+        }
+
+        .story-quote {
+          margin: 5% auto 0;
+
+          max-width: 370px;
+
+          font-family:
+            "Cormorant Garamond",
+            Georgia,
+            serif;
+
+          font-size: clamp(
+            21px,
+            5.5vw,
+            31px
+          );
+
+          line-height: 1.18;
+        }
+
+        .script-inline {
+          color: #68383c;
+
+          font-size: 1.35em;
+
+          white-space: nowrap;
+        }
+
+
+        /* =================================================
+           DRESS CODE
+        ================================================= */
+
+        .dress-text {
+          position: absolute;
+
+          inset: 0;
+
+          text-align: center;
+
+          color: #f8f3e8;
+        }
+
+        .dress-kicker {
+          position: absolute;
+
+          top: 8%;
+
+          left: 0;
+          right: 0;
+
+          font-size: clamp(
+            13px,
+            3.5vw,
+            19px
+          );
+
+          letter-spacing: .18em;
         }
 
         .dress-script {
           position: absolute;
-          top: 10%;
-          left: 50%;
-          transform: translateX(-50%);
-          width: 100%;
-          margin: 0;
-          font-family: var(--script);
-          font-size: clamp(90px, 24vw, 175px);
-          font-weight: 400;
-          line-height: .8;
+
+          top: 11%;
+
+          left: 0;
+          right: 0;
+
+          font-size: clamp(
+            57px,
+            15vw,
+            90px
+          );
+
+          line-height: .9;
+
+          color: #f7f1e4;
         }
 
-        .dress-people {
+        .dress-details {
           position: absolute;
-          left: 8%;
-          right: 8%;
-          top: 51%;
-          display: flex;
-          justify-content: space-between;
+
+          left: 10%;
+          right: 10%;
+
+          bottom: 14%;
+
+          display: grid;
+
+          grid-template-columns:
+            1fr 1fr;
+
+          gap: 15%;
         }
 
-        .person-column {
-          width: 44%;
+        .dress-column {
           text-align: center;
         }
 
-        .person-space {
-          height: 120px;
+        .dress-label {
+          font-family:
+            Arial,
+            sans-serif;
+
+          font-size: clamp(
+            9px,
+            2.4vw,
+            12px
+          );
+
+          letter-spacing: .17em;
+
+          font-weight: 600;
         }
 
-        .person-label {
-          font-family: var(--serif);
-          font-size: clamp(13px, 3.3vw, 22px);
-          letter-spacing: .32em;
-          margin-right: -.32em;
+        .dress-description {
+          margin-top: 7px;
+
+          font-size: clamp(
+            14px,
+            3.5vw,
+            19px
+          );
+
+          line-height: 1.05;
         }
 
-        .person-description {
-          margin-top: 8px;
-          font-family: var(--serif);
-          font-size: clamp(18px, 4.7vw, 29px);
-          font-style: italic;
-        }
-
-        .white-note {
+        .dress-note {
           position: absolute;
+
           left: 10%;
           right: 10%;
-          bottom: 7%;
-          color: #566444;
-          font-family: var(--serif);
-          font-size: clamp(11px, 3vw, 18px);
-          letter-spacing: .28em;
-          line-height: 1.8;
+
+          bottom: 5.5%;
+
+          font-family:
+            Arial,
+            sans-serif;
+
+          font-size: clamp(
+            7px,
+            2vw,
+            10px
+          );
+
+          letter-spacing: .12em;
+
+          line-height: 1.5;
         }
 
-        .note-line {
-          width: 50px;
-          height: 1px;
-          background: currentColor;
-          margin: 0 auto 10px;
-          opacity: .65;
+        .dress-plus {
+          position: absolute;
+
+          right: 7%;
+          top: 7%;
+
+          color: #f8f3e8;
+
+          text-decoration: none;
+
+          font-family:
+            Arial,
+            sans-serif;
+
+          font-size: 27px;
+
+          line-height: 1;
         }
 
-        .note-line.bottom {
-          margin: 10px auto 0;
-        }
 
-        /* RSVP */
+        /* =================================================
+           RSVP
+        ================================================= */
 
         .rsvp-content {
           position: absolute;
-          top: 16%;
-          left: 50%;
-          transform: translateX(-50%);
-          width: 86%;
+
+          left: 9%;
+          right: 9%;
+
+          top: 10%;
+
           text-align: center;
-          color: var(--cream);
+
+          color: #5c3037;
+        }
+
+        .rsvp-kicker {
+          font-size: clamp(
+            13px,
+            3.5vw,
+            19px
+          );
+
+          letter-spacing: .16em;
         }
 
         .rsvp-script {
-          margin: 0;
-          font-family: var(--script);
-          font-size: clamp(92px, 25vw, 180px);
-          font-weight: 400;
-          line-height: .78;
+          margin-top: 1%;
+
+          font-size: clamp(
+            55px,
+            15vw,
+            88px
+          );
+
+          line-height: .9;
+
+          color: #6a343b;
         }
 
-        .rsvp-text {
-          margin: 28px 0 22px;
-          font-family: var(--serif);
-          font-size: clamp(21px, 5.5vw, 34px);
-          line-height: 1.15;
-          font-style: italic;
+        .rsvp-message {
+          margin:
+            5% auto 0;
+
+          font-size: clamp(
+            17px,
+            4.3vw,
+            23px
+          );
+
+          line-height: 1.25;
         }
 
-        .rsvp-separator {
-          width: 80px;
-          height: 1px;
-          background: currentColor;
-          opacity: .7;
-          margin: 20px auto 22px;
-        }
-
-        .rsvp-content label {
-          display: block;
-          margin-bottom: 10px;
-          font-family: var(--serif);
-          font-size: clamp(11px, 3vw, 17px);
-          letter-spacing: .3em;
-        }
-
-        .rsvp-content input {
-          display: block;
+        .rsvp-form {
           width: 100%;
-          height: 65px;
-          border: 0;
-          outline: none;
-          border-radius: 32px;
-          background: rgba(248,240,232,.88);
-          color: #555;
-          text-align: center;
-          font-family: var(--serif);
-          font-size: 21px;
-          font-style: italic;
-          padding: 0 20px;
+          max-width: 340px;
+
+          margin:
+            9% auto 0;
+
+          text-align: left;
         }
 
-        .rsvp-content input::placeholder {
-          color: #777;
-          opacity: .9;
+        .rsvp-form label {
+          display: block;
+
+          margin-bottom: 6px;
+
+          font-family:
+            Arial,
+            sans-serif;
+
+          font-size: 9px;
+
+          letter-spacing: .13em;
+
+          color: #63343a;
+        }
+
+        .rsvp-form input {
+          width: 100%;
+
+          height: 43px;
+
+          padding:
+            0 13px;
+
+          border:
+            1px solid
+            rgba(93,48,56,.35);
+
+          border-radius: 4px;
+
+          outline: none;
+
+          background:
+            rgba(255,255,255,.70);
+
+          color: #4c3330;
+
+          font-family:
+            "Cormorant Garamond",
+            Georgia,
+            serif;
+
+          font-size: 17px;
+        }
+
+        .rsvp-form input::placeholder {
+          color:
+            rgba(85,55,50,.55);
         }
 
         .confirm-button {
-          margin-top: 25px;
-          min-width: 220px;
-          padding: 16px 30px;
-          border: 0;
-          border-radius: 40px;
-          background: var(--cream);
-          color: var(--wine);
-          font-family: var(--serif);
-          font-size: 14px;
-          letter-spacing: .25em;
+          width: 100%;
+
+          height: 40px;
+
+          margin-top: 10px;
+
+          border: none;
+
+          border-radius: 999px;
+
+          background: #65353b;
+
+          color: #fffaf2;
+
+          font-family:
+            Arial,
+            sans-serif;
+
+          font-size: 9px;
+
+          letter-spacing: .12em;
+
           cursor: pointer;
         }
 
         .confirm-button:disabled {
-          opacity: .65;
+          opacity: .6;
         }
 
         .rsvp-error {
-          margin-top: 12px;
-          font-family: var(--serif);
-          font-size: 16px;
-          color: #ffe4e4;
+          margin:
+            7px 0 0;
+
+          font-family:
+            Arial,
+            sans-serif;
+
+          font-size: 11px;
+
+          color: #8b2834;
+
+          text-align: center;
         }
 
-        /* CONFIRMACIÓN */
+
+        /* =================================================
+           CONFIRMACIÓN
+        ================================================= */
 
         .confirmation-content {
           position: absolute;
-          top: 15%;
-          left: 50%;
-          transform: translateX(-50%);
-          width: 88%;
+
+          left: 8%;
+          right: 8%;
+
+          top: 11%;
+
           text-align: center;
-          color: var(--wine);
+
+          color: #5c3434;
         }
 
         .confirmation-title {
-          font-family: var(--script);
-          font-size: clamp(75px, 20vw, 145px);
-          line-height: .8;
+          font-family:
+            "Cormorant Garamond",
+            Georgia,
+            serif;
+
+          font-size: clamp(
+            30px,
+            8vw,
+            45px
+          );
+
+          letter-spacing: .08em;
         }
 
-        .confirmation-content h2 {
-          font-family: var(--serif);
-          font-size: clamp(17px, 4.5vw, 27px);
-          letter-spacing: .2em;
+        .confirmation-main {
+          margin-top: 8%;
+
+          font-family:
+            Arial,
+            sans-serif;
+
+          font-size: clamp(
+            11px,
+            2.8vw,
+            15px
+          );
+
+          letter-spacing: .12em;
+
           line-height: 1.5;
-          font-weight: 500;
         }
 
         .seat-box {
-          margin: 40px auto;
-          padding: 22px;
-          width: min(90%, 370px);
-          border: 1px solid rgba(100,21,30,.35);
-          border-radius: 5px;
-          display: flex;
-          flex-direction: column;
-          gap: 7px;
-          font-family: var(--serif);
+          display: inline-flex;
+
+          margin-top: 8%;
+
+          padding:
+            10px 16px;
+
+          border:
+            1px solid
+            rgba(92,52,52,.28);
+
+          background:
+            rgba(255,255,255,.45);
+
+          font-family:
+            Arial,
+            sans-serif;
+
+          font-size: 10px;
+
+          letter-spacing: .08em;
         }
 
-        .seat-box span:first-child {
-          font-size: 13px;
-          letter-spacing: .22em;
+        .confirmation-message {
+          margin-top: 7%;
+
+          font-size: clamp(
+            15px,
+            3.8vw,
+            20px
+          );
+
+          line-height: 1.3;
         }
 
-        .seat-box strong {
-          font-size: 60px;
-          font-weight: 500;
-        }
 
-        .seat-box span:last-child {
-          font-size: 13px;
-          letter-spacing: .18em;
-        }
-
-        .confirmation-content p {
-          font-family: var(--serif);
-          font-size: 23px;
-          font-style: italic;
-          line-height: 1.25;
-        }
+        /* =================================================
+           ESCRITORIO
+        ================================================= */
 
         @media (min-width: 700px) {
+
+          .wedding-site {
+            background: #e8e1d6;
+          }
+
+          .cover,
           .slide {
-            width: 540px;
-            margin: 0 auto;
+            width: min(
+              100vw,
+              540px
+            );
+
+            margin-left: auto;
+            margin-right: auto;
           }
 
-          body {
-            background: #222;
-          }
-
-          .wedding-page {
-            background: var(--paper);
-          }
         }
 
       `}</style>
