@@ -44,7 +44,10 @@ export default function Home() {
     window.addEventListener("popstate", preventBack);
 
     return () => {
-      window.removeEventListener("popstate", preventBack);
+      window.removeEventListener(
+        "popstate",
+        preventBack
+      );
     };
   }, [status]);
 
@@ -100,9 +103,7 @@ export default function Home() {
 
   /*
    * UN SOLO TOQUE SOBRE EL VIDEO:
-   * - quita mute
-   * - reproduce
-   * - permite que Safari reproduzca el audio
+   * reproduce video + audio al 50%.
    */
   async function startVideoWithSound() {
     const video = videoRef.current;
@@ -111,14 +112,10 @@ export default function Home() {
 
     try {
       video.muted = false;
-      video.volume = 1;
+      video.volume = 0.5;
 
       await video.play();
     } catch {
-      /*
-       * Si Safari rechaza el sonido por alguna razón,
-       * intentamos reproducirlo de todas maneras.
-       */
       try {
         video.muted = true;
         await video.play();
@@ -272,7 +269,7 @@ export default function Home() {
             webkit-playsinline="true"
           />
 
-          {/* TOQUE INVISIBLE SOBRE EL VIDEO */}
+          {/* TOQUE SOBRE EL VIDEO */}
           <button
             type="button"
             className="video-touch-zone"
@@ -318,9 +315,7 @@ export default function Home() {
             background: #ffffff;
           }
 
-          /* =====================================
-             PORTADA
-          ===================================== */
+          /* PORTADA */
 
           .cover-image {
             position: absolute;
@@ -337,15 +332,13 @@ export default function Home() {
             z-index: 1;
           }
 
-          /* =====================================
-             VIDEO
-          ===================================== */
+          /* VIDEO */
 
           .cover-video {
             position: absolute;
 
             left: 11%;
-            top: 37%;
+            top: 35%;
 
             width: 78%;
             height: 31%;
@@ -362,25 +355,16 @@ export default function Home() {
 
             z-index: 2;
 
-            /*
-             * El video NO recibe directamente
-             * los toques.
-             *
-             * Los recibe la zona invisible
-             * que está encima.
-             */
             pointer-events: none;
           }
 
-          /* =====================================
-             ZONA INVISIBLE PARA ACTIVAR VIDEO
-          ===================================== */
+          /* ZONA INVISIBLE PARA ACTIVAR VIDEO + AUDIO */
 
           .video-touch-zone {
             position: absolute;
 
             left: 11%;
-            top: 37%;
+            top: 35%;
 
             width: 78%;
             height: 31%;
@@ -400,9 +384,7 @@ export default function Home() {
             -webkit-tap-highlight-color: transparent;
           }
 
-          /* =====================================
-             ZONA INFERIOR PARA SAVE THE DATE
-          ===================================== */
+          /* ZONA INFERIOR */
 
           .cover-touch-zone {
             position: absolute;
@@ -448,6 +430,7 @@ export default function Home() {
     <main className="invitation">
 
       {/* SAVE THE DATE */}
+
       <section className="page">
         <img
           src={IMAGES.one}
@@ -457,6 +440,7 @@ export default function Home() {
       </section>
 
       {/* SEGUNDA IMAGEN */}
+
       <section className="page">
         <img
           src={IMAGES.two}
@@ -466,6 +450,7 @@ export default function Home() {
       </section>
 
       {/* CONFIRMACIÓN */}
+
       <section className="page confirmation-page">
         <img
           src={IMAGES.three}
@@ -536,11 +521,15 @@ export default function Home() {
 
         .page {
           position: relative;
+
           width: 100%;
           aspect-ratio: 9 / 16;
+
           overflow: hidden;
+
           margin: 0;
           padding: 0;
+
           background: #ffffff;
         }
 
@@ -605,6 +594,7 @@ export default function Home() {
             sans-serif;
 
           font-size: 15px;
+
           text-align: center;
         }
 
