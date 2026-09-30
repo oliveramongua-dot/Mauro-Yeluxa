@@ -3,14 +3,12 @@
 import { useEffect, useState } from "react";
 
 const IMAGES = {
+  cover: "/portada-mauro-yeluxa.jpg",
   one: "/foto-1.jpg",
   two: "/foto-2.jpg",
   three: "/foto-3.jpg",
   four: "/foto-4.jpg",
 };
-
-const COVER_IMAGE = "/portada-mauro-yeluxa.jpg";
-const COVER_VIDEO = "/video-mauro-yeluxa.mp4";
 
 export default function Home() {
   const [introFinished, setIntroFinished] = useState(false);
@@ -99,7 +97,7 @@ export default function Home() {
     }
   }
 
-  /* PANTALLA FINAL DESPUÉS DE CONFIRMAR */
+  /* PANTALLA FINAL */
   if (status === "confirmed") {
     return (
       <main className="final-only">
@@ -137,7 +135,6 @@ export default function Home() {
           .final-only {
             width: 100%;
             min-height: 100vh;
-            background: #ffffff;
           }
 
           .final-page {
@@ -145,8 +142,6 @@ export default function Home() {
             width: 100%;
             aspect-ratio: 9 / 16;
             overflow: hidden;
-            margin: 0;
-            padding: 0;
           }
 
           .background-image {
@@ -156,7 +151,6 @@ export default function Home() {
             height: 100%;
             display: block;
             object-fit: cover;
-            object-position: center;
           }
 
           .seats-container {
@@ -168,7 +162,6 @@ export default function Home() {
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
             text-align: center;
             color: #5d3038;
           }
@@ -177,7 +170,6 @@ export default function Home() {
             font-family:
               "Cormorant Garamond",
               Georgia,
-              "Times New Roman",
               serif;
             font-size: clamp(100px, 29vw, 165px);
             line-height: .82;
@@ -186,14 +178,9 @@ export default function Home() {
 
           .seats-text {
             margin-top: 18px;
-            font-family:
-              Arial,
-              Helvetica,
-              sans-serif;
+            font-family: Arial, Helvetica, sans-serif;
             font-size: clamp(14px, 4vw, 19px);
-            line-height: 1;
             letter-spacing: .16em;
-            font-weight: 400;
           }
 
           @media (min-width: 700px) {
@@ -208,29 +195,23 @@ export default function Home() {
     );
   }
 
-  /* PORTADA + VIDEO */
+  /* PORTADA */
   if (!introFinished) {
     return (
-      <main className="intro-screen">
-        <section
-          className="intro-page"
-          onClick={() => setIntroFinished(true)}
-        >
+      <main className="cover-screen">
+        <section className="cover-page">
           <img
-            src={COVER_IMAGE}
+            src={IMAGES.cover}
             alt=""
-            className="intro-background"
+            className="cover-image"
           />
 
-          <video
-            className="intro-video"
-            src={COVER_VIDEO}
-            autoPlay
-            muted
-            playsInline
-            loop
-            preload="auto"
-            poster={COVER_IMAGE}
+          {/* SOLO LA PARTE INFERIOR ES TÁCTIL */}
+          <button
+            type="button"
+            className="cover-touch-zone"
+            aria-label="Abrir invitación"
+            onClick={() => setIntroFinished(true)}
           />
         </section>
 
@@ -247,23 +228,22 @@ export default function Home() {
             overflow-x: hidden;
           }
 
-          .intro-screen {
+          .cover-screen {
             width: 100%;
             min-height: 100vh;
             background: #ffffff;
           }
 
-          .intro-page {
+          .cover-page {
             position: relative;
             width: 100%;
             height: 100vh;
-            min-height: 100svh;
+            height: 100svh;
             overflow: hidden;
-            cursor: pointer;
-            background: #f8f6f2;
+            background: #ffffff;
           }
 
-          .intro-background {
+          .cover-image {
             position: absolute;
             inset: 0;
             width: 100%;
@@ -273,19 +253,22 @@ export default function Home() {
             object-position: center;
           }
 
-          .intro-video {
+          .cover-touch-zone {
             position: absolute;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-            display: block;
-            object-fit: contain;
-            object-position: center;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: 28%;
+            padding: 0;
+            margin: 0;
+            border: 0;
             background: transparent;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
           }
 
           @media (min-width: 700px) {
-            .intro-page {
+            .cover-page {
               width: min(100vw, 540px);
               margin-left: auto;
               margin-right: auto;
@@ -296,7 +279,7 @@ export default function Home() {
     );
   }
 
-  /* INVITACIÓN */
+  /* SAVE THE DATE + RSVP */
   return (
     <main className="invitation">
       <section className="page">
@@ -390,7 +373,6 @@ export default function Home() {
           overflow: hidden;
           margin: 0;
           padding: 0;
-          background: #ffffff;
         }
 
         .background-image {
@@ -401,10 +383,6 @@ export default function Home() {
           display: block;
           object-fit: cover;
           object-position: center;
-        }
-
-        .confirmation-page {
-          position: relative;
         }
 
         .confirmation-form-container {
@@ -435,20 +413,13 @@ export default function Home() {
           outline: none;
           background: rgba(255, 255, 255, .90);
           color: #3f2d2d;
-          font-family:
-            Arial,
-            Helvetica,
-            sans-serif;
+          font-family: Arial, Helvetica, sans-serif;
           font-size: 15px;
           text-align: center;
         }
 
         .confirmation-form input::placeholder {
           color: rgba(65, 45, 45, .55);
-        }
-
-        .confirmation-form input:focus {
-          border-color: rgba(80, 45, 45, .65);
         }
 
         .confirmation-form button {
@@ -460,10 +431,7 @@ export default function Home() {
           border-radius: 999px;
           background: #5d3038;
           color: #ffffff;
-          font-family:
-            Arial,
-            Helvetica,
-            sans-serif;
+          font-family: Arial, Helvetica, sans-serif;
           font-size: 10px;
           letter-spacing: .14em;
           cursor: pointer;
@@ -471,7 +439,6 @@ export default function Home() {
 
         .confirmation-form button:disabled {
           opacity: .6;
-          cursor: default;
         }
 
         .error-message {
@@ -479,10 +446,7 @@ export default function Home() {
           margin-top: 9px;
           padding: 0 10px;
           color: #8a2935;
-          font-family:
-            Arial,
-            Helvetica,
-            sans-serif;
+          font-family: Arial, Helvetica, sans-serif;
           font-size: 11px;
           line-height: 1.3;
           text-align: center;
