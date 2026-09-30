@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const IMAGES = {
   cover: "/portada-mauro-yeluxa.jpg",
@@ -13,6 +13,8 @@ const IMAGES = {
 const COVER_VIDEO = "/video-mauro-yeluxa.mp4";
 
 export default function Home() {
+  const videoRef = useRef(null);
+
   const [introFinished, setIntroFinished] = useState(false);
   const [name, setName] = useState("");
   const [status, setStatus] = useState("idle");
@@ -93,6 +95,34 @@ export default function Home() {
       setError(
         "No pudimos procesar la confirmación. Inténtalo nuevamente."
       );
+    }
+  }
+
+  /*
+   * UN SOLO TOQUE SOBRE EL VIDEO:
+   * - quita mute
+   * - reproduce
+   * - permite que Safari reproduzca el audio
+   */
+  async function startVideoWithSound() {
+    const video = videoRef.current;
+
+    if (!video) return;
+
+    try {
+      video.muted = false;
+      video.volume = 1;
+
+      await video.play();
+    } catch {
+      /*
+       * Si Safari rechaza el sonido por alguna razón,
+       * intentamos reproducirlo de todas maneras.
+       */
+      try {
+        video.muted = true;
+        await video.play();
+      } catch {}
     }
   }
 
@@ -222,7 +252,7 @@ export default function Home() {
       <main className="cover-screen">
         <section className="cover-page">
 
-          {/* PORTADA DE CANVA */}
+          {/* PORTADA ORIGINAL DE CANVA */}
           <img
             src={IMAGES.cover}
             alt=""
@@ -231,33 +261,26 @@ export default function Home() {
 
           {/* VIDEO */}
           <video
+            ref={videoRef}
             className="cover-video"
             src={COVER_VIDEO}
-            autoPlay
             muted
             loop
             playsInline
             preload="auto"
             controls={false}
-            onCanPlay={(event) => {
-              event.currentTarget
-                .play()
-                .catch(() => {});
-            }}
-            onClick={(event) => {
-              event.stopPropagation();
-
-              const video = event.currentTarget;
-
-              if (video.paused) {
-                video.play().catch(() => {});
-              } else {
-                video.pause();
-              }
-            }}
+            webkit-playsinline="true"
           />
 
-          {/* ZONA INFERIOR PARA ABRIR EL SAVE THE DATE */}
+          {/* TOQUE INVISIBLE SOBRE EL VIDEO */}
+          <button
+            type="button"
+            className="video-touch-zone"
+            aria-label="Reproducir video con sonido"
+            onClick={startVideoWithSound}
+          />
+
+          {/* ZONA INFERIOR PARA ABRIR SAVE THE DATE */}
           <button
             type="button"
             className="cover-touch-zone"
@@ -295,7 +318,10 @@ export default function Home() {
             background: #ffffff;
           }
 
-          /* PORTADA ORIGINAL */
+          /* =====================================
+             PORTADA
+          ===================================== */
+
           .cover-image {
             position: absolute;
             inset: 0;
@@ -311,13 +337,12 @@ export default function Home() {
             z-index: 1;
           }
 
-          /* VIDEO */
+          /* =====================================
+             VIDEO
+          ===================================== */
+
           .cover-video {
             position: absolute;
-
-            /*
-              POSICIÓN FINAL DEL VIDEO
-            */
 
             left: 11%;
             top: 37%;
@@ -327,26 +352,57 @@ export default function Home() {
 
             display: block;
 
-            /*
-              Conserva la proporción
-              original del video.
-            */
             object-fit: contain;
             object-position: center;
 
             background: transparent;
 
-            z-index: 2;
-
             border: none;
             outline: none;
 
-            pointer-events: auto;
+            z-index: 2;
+
+            /*
+             * El video NO recibe directamente
+             * los toques.
+             *
+             * Los recibe la zona invisible
+             * que está encima.
+             */
+            pointer-events: none;
           }
 
-          /*
-            ZONA INFERIOR TÁCTIL
-          */
+          /* =====================================
+             ZONA INVISIBLE PARA ACTIVAR VIDEO
+          ===================================== */
+
+          .video-touch-zone {
+            position: absolute;
+
+            left: 11%;
+            top: 37%;
+
+            width: 78%;
+            height: 31%;
+
+            margin: 0;
+            padding: 0;
+
+            border: 0;
+            outline: none;
+
+            background: transparent;
+
+            z-index: 4;
+
+            cursor: pointer;
+
+            -webkit-tap-highlight-color: transparent;
+          }
+
+          /* =====================================
+             ZONA INFERIOR PARA SAVE THE DATE
+          ===================================== */
 
           .cover-touch-zone {
             position: absolute;
@@ -612,6 +668,7 @@ export default function Home() {
         @media (min-width: 700px) {
           .page {
             width: min(100vw, 540px);
+
             margin-left: auto;
             margin-right: auto;
           }
