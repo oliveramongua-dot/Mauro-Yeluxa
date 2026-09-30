@@ -222,7 +222,7 @@ export default function Home() {
       <main className="cover-screen">
         <section className="cover-page">
 
-          {/* PORTADA ORIGINAL DE CANVA */}
+          {/* PORTADA DE CANVA */}
           <img
             src={IMAGES.cover}
             alt=""
@@ -239,13 +239,11 @@ export default function Home() {
             playsInline
             preload="auto"
             controls={false}
-
             onCanPlay={(event) => {
               event.currentTarget
                 .play()
                 .catch(() => {});
             }}
-
             onClick={(event) => {
               event.stopPropagation();
 
@@ -293,12 +291,11 @@ export default function Home() {
             width: 100%;
             height: 100vh;
             height: 100svh;
-
             overflow: hidden;
             background: #ffffff;
           }
 
-          /* PORTADA */
+          /* PORTADA ORIGINAL */
           .cover-image {
             position: absolute;
             inset: 0;
@@ -319,20 +316,20 @@ export default function Home() {
             position: absolute;
 
             /*
-              Área exacta aproximada
-              del rectángulo que marcaste.
+              POSICIÓN FINAL DEL VIDEO
             */
 
-            left: 18%;
-            top: 40%;
+            left: 11%;
+            top: 37%;
 
-            width: 64%;
-            height: 25%;
+            width: 78%;
+            height: 31%;
 
             display: block;
 
             /*
-              Mantiene la proporción del video.
+              Conserva la proporción
+              original del video.
             */
             object-fit: contain;
             object-position: center;
@@ -341,21 +338,14 @@ export default function Home() {
 
             z-index: 2;
 
-            /*
-              Permitimos tocar el video
-              para iniciar/reanudar.
-            */
-            pointer-events: auto;
-
             border: none;
             outline: none;
+
+            pointer-events: auto;
           }
 
           /*
-            ZONA INFERIOR TÁCTIL.
-
-            No tiene ningún diseño visible.
-            Solo sirve para abrir el Save the Date.
+            ZONA INFERIOR TÁCTIL
           */
 
           .cover-touch-zone {
@@ -401,7 +391,7 @@ export default function Home() {
   return (
     <main className="invitation">
 
-      {/* SAVE THE DATE - IMAGEN 1 */}
+      {/* SAVE THE DATE */}
       <section className="page">
         <img
           src={IMAGES.one}
@@ -410,7 +400,7 @@ export default function Home() {
         />
       </section>
 
-      {/* IMAGEN 2 */}
+      {/* SEGUNDA IMAGEN */}
       <section className="page">
         <img
           src={IMAGES.two}
@@ -490,15 +480,11 @@ export default function Home() {
 
         .page {
           position: relative;
-
           width: 100%;
           aspect-ratio: 9 / 16;
-
           overflow: hidden;
-
           margin: 0;
           padding: 0;
-
           background: #ffffff;
         }
 
@@ -563,7 +549,6 @@ export default function Home() {
             sans-serif;
 
           font-size: 15px;
-
           text-align: center;
         }
 
@@ -627,7 +612,6 @@ export default function Home() {
         @media (min-width: 700px) {
           .page {
             width: min(100vw, 540px);
-
             margin-left: auto;
             margin-right: auto;
           }
