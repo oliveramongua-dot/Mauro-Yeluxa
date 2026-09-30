@@ -10,6 +10,8 @@ const IMAGES = {
   four: "/foto-4.jpg",
 };
 
+const COVER_VIDEO = "/video-mauro-yeluxa.mp4";
+
 export default function Home() {
   const [introFinished, setIntroFinished] = useState(false);
   const [name, setName] = useState("");
@@ -40,10 +42,7 @@ export default function Home() {
     window.addEventListener("popstate", preventBack);
 
     return () => {
-      window.removeEventListener(
-        "popstate",
-        preventBack
-      );
+      window.removeEventListener("popstate", preventBack);
     };
   }, [status]);
 
@@ -97,7 +96,10 @@ export default function Home() {
     }
   }
 
-  /* PANTALLA FINAL */
+  /* =========================
+     PANTALLA FINAL
+  ========================= */
+
   if (status === "confirmed") {
     return (
       <main className="final-only">
@@ -135,6 +137,7 @@ export default function Home() {
           .final-only {
             width: 100%;
             min-height: 100vh;
+            background: #ffffff;
           }
 
           .final-page {
@@ -151,6 +154,7 @@ export default function Home() {
             height: 100%;
             display: block;
             object-fit: cover;
+            object-position: center;
           }
 
           .seats-container {
@@ -162,6 +166,7 @@ export default function Home() {
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
             text-align: center;
             color: #5d3038;
           }
@@ -170,6 +175,7 @@ export default function Home() {
             font-family:
               "Cormorant Garamond",
               Georgia,
+              "Times New Roman",
               serif;
             font-size: clamp(100px, 29vw, 165px);
             line-height: .82;
@@ -178,9 +184,14 @@ export default function Home() {
 
           .seats-text {
             margin-top: 18px;
-            font-family: Arial, Helvetica, sans-serif;
+            font-family:
+              Arial,
+              Helvetica,
+              sans-serif;
             font-size: clamp(14px, 4vw, 19px);
+            line-height: 1;
             letter-spacing: .16em;
+            font-weight: 400;
           }
 
           @media (min-width: 700px) {
@@ -195,22 +206,38 @@ export default function Home() {
     );
   }
 
-  /* PORTADA */
+  /* =========================
+     PORTADA + VIDEO
+  ========================= */
+
   if (!introFinished) {
     return (
       <main className="cover-screen">
         <section className="cover-page">
+
+          {/* PORTADA DE CANVA */}
           <img
             src={IMAGES.cover}
             alt=""
             className="cover-image"
           />
 
-          {/* SOLO LA PARTE INFERIOR ES TÁCTIL */}
+          {/* VIDEO DENTRO DEL ÁREA MARCADA */}
+          <video
+            className="cover-video"
+            src={COVER_VIDEO}
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="auto"
+          />
+
+          {/* ZONA INFERIOR TÁCTIL */}
           <button
             type="button"
             className="cover-touch-zone"
-            aria-label="Abrir invitación"
+            aria-label="Abrir Save the Date"
             onClick={() => setIntroFinished(true)}
           />
         </section>
@@ -243,6 +270,7 @@ export default function Home() {
             background: #ffffff;
           }
 
+          /* PORTADA ORIGINAL */
           .cover-image {
             position: absolute;
             inset: 0;
@@ -251,19 +279,66 @@ export default function Home() {
             display: block;
             object-fit: cover;
             object-position: center;
+            z-index: 1;
           }
 
+          /* VIDEO */
+          .cover-video {
+            position: absolute;
+
+            /*
+              Posición del rectángulo que marcaste:
+              izquierda ~18%
+              arriba ~40%
+              ancho ~64%
+              alto ~25%
+            */
+
+            left: 18%;
+            top: 40%;
+            width: 64%;
+            height: 25%;
+
+            display: block;
+
+            /*
+              El video llena el área sin deformarse.
+            */
+            object-fit: cover;
+            object-position: center;
+
+            z-index: 2;
+
+            /*
+              Evita que el video interfiera
+              con el toque inferior.
+            */
+            pointer-events: none;
+
+            background: transparent;
+          }
+
+          /*
+            SOLO LA PARTE INFERIOR ES TÁCTIL
+          */
           .cover-touch-zone {
             position: absolute;
             left: 0;
             right: 0;
             bottom: 0;
+
             height: 28%;
-            padding: 0;
+
             margin: 0;
+            padding: 0;
+
             border: 0;
             background: transparent;
+
+            z-index: 5;
+
             cursor: pointer;
+
             -webkit-tap-highlight-color: transparent;
           }
 
@@ -279,9 +354,13 @@ export default function Home() {
     );
   }
 
-  /* SAVE THE DATE + RSVP */
+  /* =========================
+     SAVE THE DATE + RSVP
+  ========================= */
+
   return (
     <main className="invitation">
+
       <section className="page">
         <img
           src={IMAGES.one}
@@ -373,6 +452,7 @@ export default function Home() {
           overflow: hidden;
           margin: 0;
           padding: 0;
+          background: #ffffff;
         }
 
         .background-image {
@@ -413,13 +493,20 @@ export default function Home() {
           outline: none;
           background: rgba(255, 255, 255, .90);
           color: #3f2d2d;
-          font-family: Arial, Helvetica, sans-serif;
+          font-family:
+            Arial,
+            Helvetica,
+            sans-serif;
           font-size: 15px;
           text-align: center;
         }
 
         .confirmation-form input::placeholder {
           color: rgba(65, 45, 45, .55);
+        }
+
+        .confirmation-form input:focus {
+          border-color: rgba(80, 45, 45, .65);
         }
 
         .confirmation-form button {
@@ -431,7 +518,10 @@ export default function Home() {
           border-radius: 999px;
           background: #5d3038;
           color: #ffffff;
-          font-family: Arial, Helvetica, sans-serif;
+          font-family:
+            Arial,
+            Helvetica,
+            sans-serif;
           font-size: 10px;
           letter-spacing: .14em;
           cursor: pointer;
@@ -439,6 +529,7 @@ export default function Home() {
 
         .confirmation-form button:disabled {
           opacity: .6;
+          cursor: default;
         }
 
         .error-message {
@@ -446,7 +537,10 @@ export default function Home() {
           margin-top: 9px;
           padding: 0 10px;
           color: #8a2935;
-          font-family: Arial, Helvetica, sans-serif;
+          font-family:
+            Arial,
+            Helvetica,
+            sans-serif;
           font-size: 11px;
           line-height: 1.3;
           text-align: center;
