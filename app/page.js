@@ -15,30 +15,38 @@ export default function Home() {
   const [error, setError] = useState("");
   const [seats, setSeats] = useState(null);
 
-  // Cuando la confirmación es exitosa,
-  // evitamos que el navegador vuelva a mostrar
-  // la pantalla anterior de la invitación.
+  /*
+   * Cuando la confirmación es exitosa,
+   * evitamos que el botón Atrás vuelva
+   * a mostrar la pantalla de confirmación.
+   */
   useEffect(() => {
     if (status !== "confirmed") return;
+
+    const finalUrl =
+      window.location.href.split("#")[0] + "#confirmada";
 
     window.history.pushState(
       { confirmation: true },
       "",
-      window.location.href.split("#")[0] + "#confirmada"
+      finalUrl
     );
 
     const preventBack = () => {
       window.history.pushState(
         { confirmation: true },
         "",
-        window.location.href.split("#")[0] + "#confirmada"
+        finalUrl
       );
     };
 
     window.addEventListener("popstate", preventBack);
 
     return () => {
-      window.removeEventListener("popstate", preventBack);
+      window.removeEventListener(
+        "popstate",
+        preventBack
+      );
     };
   }, [status]);
 
@@ -79,13 +87,9 @@ export default function Home() {
         return;
       }
 
-      // Guardamos los cupos asignados
       setSeats(data.seats);
-
-      // Pasamos directamente al estado final
       setStatus("confirmed");
 
-      // Arriba de la foto 4
       window.scrollTo({
         top: 0,
         behavior: "instant",
@@ -101,16 +105,16 @@ export default function Home() {
 
   /*
    * ======================================================
-   * PANTALLA FINAL
+   * FOTO 4
    * ======================================================
    *
-   * Después de confirmar, SOLO existe la foto 4.
+   * Después de confirmar, solamente se muestra
+   * la cuarta foto.
    */
 
   if (status === "confirmed") {
     return (
       <main className="final-only">
-
         <section className="final-page">
 
           <img
@@ -181,9 +185,7 @@ export default function Home() {
           }
 
           /*
-           * CUPOS
-           *
-           * Más abajo dentro del cuadro blanco.
+           * CUPOS CONFIRMADOS
            */
 
           .seats-container {
@@ -276,9 +278,9 @@ export default function Home() {
   return (
     <main className="invitation">
 
-      {/* ==================================================
+      {/* ================================================
           FOTO 1
-      ================================================== */}
+      ================================================= */}
 
       <section className="page">
 
@@ -291,9 +293,9 @@ export default function Home() {
       </section>
 
 
-      {/* ==================================================
+      {/* ================================================
           FOTO 2
-      ================================================== */}
+      ================================================= */}
 
       <section className="page">
 
@@ -306,9 +308,9 @@ export default function Home() {
       </section>
 
 
-      {/* ==================================================
+      {/* ================================================
           FOTO 3 — CONFIRMACIÓN
-      ================================================== */}
+      ================================================= */}
 
       <section className="page confirmation-page">
 
@@ -426,7 +428,7 @@ export default function Home() {
 
 
         /* ================================================
-           FOTO 3
+           FOTO 3 — FORMULARIO
         ================================================= */
 
         .confirmation-page {
@@ -434,17 +436,17 @@ export default function Home() {
         }
 
         /*
-         * El formulario baja bastante más
-         * para quedar dentro del cuadro blanco.
+         * El formulario está más abajo
+         * y más angosto de los lados.
          */
 
         .confirmation-form-container {
           position: absolute;
 
-          left: 9%;
-          right: 9%;
+          left: 15%;
+          right: 15%;
 
-          top: 72%;
+          top: 66%;
 
           transform: translateY(-50%);
 
@@ -458,7 +460,7 @@ export default function Home() {
         .confirmation-form {
           width: 100%;
 
-          max-width: 380px;
+          max-width: 330px;
 
           display: flex;
 
@@ -566,6 +568,10 @@ export default function Home() {
           text-align: center;
         }
 
+
+        /* ================================================
+           PANTALLAS GRANDES
+        ================================================= */
 
         @media (min-width: 700px) {
 
