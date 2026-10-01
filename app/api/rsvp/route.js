@@ -54,10 +54,28 @@ function normalizeName(value = "") {
     .trim();
 }
 
+async function supabaseRequest(path, options = {}) {
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SECRET_KEY;
+
+  if (!url || !key) {
+    throw new Error("Faltan las variables de Supabase.");
+  }
+
+  return fetch(`${url}/rest/v1/${path}`, {
+    ...options,
+    headers: {
+      apikey: key,
+      Authorization: `Bearer ${key}`,
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+}
+
 export async function POST(request) {
   try {
     const body = await request.json();
-
     const normalized = normalizeName(body?.name);
 
     if (!normalized) {
@@ -85,17 +103,90 @@ export async function POST(request) {
       );
     }
 
+    const encodedName = encodeURIComponent(guest.name);
+
+    const existingResponse = await supabaseRequest(
+      `confirmaciones?nombre=eq.${encodedName}&select=id,confirmado`
+    );
+
+    if (!existingResponse.ok) {
+      throw new Error(
+        `Error consultando Supabase: ${existingResponse.status}`
+      );
+    }
+
+    const existing = await existingResponse.json();
+
+    if (existing.length > 0 && existing[0].confirmado === true) {
+      return NextResponse.json({
+        valid: true,
+        alreadyConfirmed: true,
+        seats: guest.seats,
+      });
+    }
+
+    const now = new Date().toISOString();
+
+    if (existing.length > 0) {
+      const updateResponse = await supabaseRequest(
+        `confirmaciones?nombre=eq.${encodedName}`,
+        {
+          method: "PATCH",
+          headers: {
+            Prefer: "return=minimal",
+          },
+          body: JSON.stringify({
+            cupos: guest.seats,
+            confirmado: true,
+            confirmado_at: now,
+          }),
+        }
+      );
+
+      if (!updateResponse.ok) {
+        throw new Error(
+          `Error actualizando Supabase: ${updateResponse.status}`
+        );
+      }
+    } else {
+      const insertResponse = await supabaseRequest(
+        "confirmaciones",
+        {
+          method: "POST",
+          headers: {
+            Prefer: "return=minimal",
+          },
+          body: JSON.stringify({
+            nombre: guest.name,
+            cupos: guest.seats,
+            confirmado: true,
+            confirmado_at: now,
+          }),
+        }
+      );
+
+      if (!insertResponse.ok) {
+        throw new Error(
+          `Error guardando en Supabase: ${insertResponse.status}`
+        );
+      }
+    }
+
     return NextResponse.json({
       valid: true,
+      alreadyConfirmed: false,
       seats: guest.seats,
     });
-  } catch {
+  } catch (error) {
+    console.error("RSVP error:", error);
+
     return NextResponse.json(
       {
         valid: false,
-        message: "No pudimos procesar la confirmación.",
+        message:
+          "No pudimos procesar la confirmación. Inténtalo nuevamente.",
       },
-      { status: 400 }
+      { status: 500 }
     );
   }
 }
