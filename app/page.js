@@ -16,8 +16,6 @@ const COVER_VIDEO = "/video-mauro-yeluxa.mp4";
 export default function Home() {
   const videoRef = useRef(null);
 
-  const [introFinished, setIntroFinished] = useState(false);
-  const [coverLeaving, setCoverLeaving] = useState(false);
   const [name, setName] = useState("");
   const [status, setStatus] = useState("idle");
   const [error, setError] = useState("");
@@ -49,16 +47,6 @@ export default function Home() {
       window.removeEventListener("popstate", preventBack);
     };
   }, [status]);
-
-  function openInvitation() {
-    if (coverLeaving) return;
-
-    setCoverLeaving(true);
-
-    window.setTimeout(() => {
-      setIntroFinished(true);
-    }, 500);
-  }
 
   async function confirmAttendance(event) {
     event.preventDefault();
@@ -208,7 +196,7 @@ export default function Home() {
               "Times New Roman",
               serif;
             font-size: clamp(100px, 29vw, 165px);
-            line-height: .82;
+            line-height: 0.82;
             font-weight: 400;
           }
 
@@ -217,7 +205,7 @@ export default function Home() {
             font-family: Arial, Helvetica, sans-serif;
             font-size: clamp(14px, 4vw, 19px);
             line-height: 1;
-            letter-spacing: .16em;
+            letter-spacing: 0.16em;
             font-weight: 400;
           }
 
@@ -233,160 +221,37 @@ export default function Home() {
     );
   }
 
-  if (!introFinished) {
-    return (
-      <main className="cover-screen">
-        <section
-          className={`cover-page ${
-            coverLeaving ? "leaving" : ""
-          }`}
-        >
-          <img
-            src={IMAGES.cover}
-            alt=""
-            className="cover-image"
-          />
-
-          <video
-            ref={videoRef}
-            className="cover-video"
-            src={COVER_VIDEO}
-            muted
-            loop
-            playsInline
-            preload="auto"
-            controls={false}
-            webkit-playsinline="true"
-          />
-
-          <button
-            type="button"
-            className="video-touch-zone"
-            aria-label="Reproducir video con sonido"
-            onClick={startVideoWithSound}
-          />
-
-          <button
-            type="button"
-            className="cover-touch-zone"
-            aria-label="Abrir Save the Date"
-            onClick={openInvitation}
-            disabled={coverLeaving}
-          />
-        </section>
-
-        <style jsx global>{`
-          * {
-            box-sizing: border-box;
-          }
-
-          html,
-          body {
-            margin: 0;
-            padding: 0;
-            background: #ffffff;
-            overflow-x: hidden;
-          }
-
-          .cover-screen {
-            width: 100%;
-            min-height: 100vh;
-            background: #ffffff;
-          }
-
-          .cover-page {
-            position: relative;
-            width: 100%;
-            height: 100vh;
-            height: 100svh;
-            overflow: hidden;
-            background: #ffffff;
-            opacity: 1;
-            transition: opacity 0.5s ease;
-          }
-
-          .cover-page.leaving {
-            opacity: 0;
-            pointer-events: none;
-          }
-
-          .cover-image {
-            position: absolute;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-            display: block;
-            object-fit: cover;
-            object-position: center;
-            z-index: 1;
-          }
-
-          .cover-video {
-            position: absolute;
-            left: 11%;
-            top: 35%;
-            width: 78%;
-            height: 31%;
-            display: block;
-            object-fit: contain;
-            object-position: center;
-            background: transparent;
-            border: none;
-            outline: none;
-            z-index: 2;
-            pointer-events: none;
-          }
-
-          .video-touch-zone {
-            position: absolute;
-            left: 11%;
-            top: 35%;
-            width: 78%;
-            height: 31%;
-            margin: 0;
-            padding: 0;
-            border: 0;
-            outline: none;
-            background: transparent;
-            z-index: 4;
-            cursor: pointer;
-            -webkit-tap-highlight-color: transparent;
-          }
-
-          .cover-touch-zone {
-            position: absolute;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            height: 28%;
-            margin: 0;
-            padding: 0;
-            border: 0;
-            outline: none;
-            background: transparent;
-            z-index: 5;
-            cursor: pointer;
-            -webkit-tap-highlight-color: transparent;
-          }
-
-          .cover-touch-zone:disabled {
-            cursor: default;
-          }
-
-          @media (min-width: 700px) {
-            .cover-page {
-              width: min(100vw, 540px);
-              margin-left: auto;
-              margin-right: auto;
-            }
-          }
-        `}</style>
-      </main>
-    );
-  }
-
   return (
     <main className="invitation">
+      {/* PORTADA: AHORA ES LA PRIMERA HOJA */}
+      <section className="page cover-page">
+        <img
+          src={IMAGES.cover}
+          alt=""
+          className="background-image"
+        />
+
+        <video
+          ref={videoRef}
+          className="cover-video"
+          src={COVER_VIDEO}
+          muted
+          loop
+          playsInline
+          preload="auto"
+          controls={false}
+          webkit-playsinline="true"
+        />
+
+        <button
+          type="button"
+          className="video-touch-zone"
+          aria-label="Reproducir video con sonido"
+          onClick={startVideoWithSound}
+        />
+      </section>
+
+      {/* SEGUNDA HOJA */}
       <section className="page">
         <img
           src={IMAGES.one}
@@ -395,6 +260,7 @@ export default function Home() {
         />
       </section>
 
+      {/* TERCERA HOJA */}
       <section className="page">
         <img
           src={IMAGES.two}
@@ -403,6 +269,7 @@ export default function Home() {
         />
       </section>
 
+      {/* HOJA DE CONFIRMACIÓN */}
       <section className="page confirmation-page">
         <img
           src={IMAGES.three}
@@ -454,14 +321,15 @@ export default function Home() {
         html {
           margin: 0;
           padding: 0;
-          scroll-behavior: smooth;
           background: #ffffff;
+          scroll-behavior: smooth;
         }
 
         body {
           margin: 0;
           padding: 0;
           background: #ffffff;
+          overflow-x: hidden;
         }
 
         .invitation {
@@ -469,17 +337,6 @@ export default function Home() {
           margin: 0;
           padding: 0;
           overflow-x: hidden;
-          animation: invitationFadeIn 0.7s ease both;
-        }
-
-        @keyframes invitationFadeIn {
-          from {
-            opacity: 0;
-          }
-
-          to {
-            opacity: 1;
-          }
         }
 
         .page {
@@ -500,6 +357,43 @@ export default function Home() {
           display: block;
           object-fit: cover;
           object-position: center;
+        }
+
+        /* PORTADA INTEGRADA AL DESPLAZAMIENTO */
+        .cover-page {
+          aspect-ratio: 9 / 16;
+        }
+
+        .cover-video {
+          position: absolute;
+          left: 11%;
+          top: 35%;
+          width: 78%;
+          height: 31%;
+          display: block;
+          object-fit: contain;
+          object-position: center;
+          background: transparent;
+          border: none;
+          outline: none;
+          z-index: 2;
+          pointer-events: none;
+        }
+
+        .video-touch-zone {
+          position: absolute;
+          left: 11%;
+          top: 35%;
+          width: 78%;
+          height: 31%;
+          margin: 0;
+          padding: 0;
+          border: 0;
+          outline: none;
+          background: transparent;
+          z-index: 4;
+          cursor: pointer;
+          -webkit-tap-highlight-color: transparent;
         }
 
         .confirmation-page {
@@ -529,10 +423,10 @@ export default function Home() {
           width: 100%;
           height: 50px;
           padding: 0 16px;
-          border: 1px solid rgba(80, 45, 45, .35);
+          border: 1px solid rgba(80, 45, 45, 0.35);
           border-radius: 4px;
           outline: none;
-          background: rgba(255, 255, 255, .90);
+          background: rgba(255, 255, 255, 0.90);
           color: #3f2d2d;
           font-family: Arial, Helvetica, sans-serif;
           font-size: 15px;
@@ -540,11 +434,11 @@ export default function Home() {
         }
 
         .confirmation-form input::placeholder {
-          color: rgba(65, 45, 45, .55);
+          color: rgba(65, 45, 45, 0.55);
         }
 
         .confirmation-form input:focus {
-          border-color: rgba(80, 45, 45, .65);
+          border-color: rgba(80, 45, 45, 0.65);
         }
 
         .confirmation-form button {
@@ -558,12 +452,12 @@ export default function Home() {
           color: #ffffff;
           font-family: Arial, Helvetica, sans-serif;
           font-size: 10px;
-          letter-spacing: .14em;
+          letter-spacing: 0.14em;
           cursor: pointer;
         }
 
         .confirmation-form button:disabled {
-          opacity: .6;
+          opacity: 0.6;
           cursor: default;
         }
 
