@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -16,6 +17,7 @@ export default function Home() {
   const videoRef = useRef(null);
 
   const [introFinished, setIntroFinished] = useState(false);
+  const [coverLeaving, setCoverLeaving] = useState(false);
   const [name, setName] = useState("");
   const [status, setStatus] = useState("idle");
   const [error, setError] = useState("");
@@ -44,12 +46,19 @@ export default function Home() {
     window.addEventListener("popstate", preventBack);
 
     return () => {
-      window.removeEventListener(
-        "popstate",
-        preventBack
-      );
+      window.removeEventListener("popstate", preventBack);
     };
   }, [status]);
+
+  function openInvitation() {
+    if (coverLeaving) return;
+
+    setCoverLeaving(true);
+
+    window.setTimeout(() => {
+      setIntroFinished(true);
+    }, 500);
+  }
 
   async function confirmAttendance(event) {
     event.preventDefault();
@@ -101,10 +110,6 @@ export default function Home() {
     }
   }
 
-  /*
-   * UN SOLO TOQUE SOBRE EL VIDEO:
-   * reproduce video + audio al 50%.
-   */
   async function startVideoWithSound() {
     const video = videoRef.current;
 
@@ -122,10 +127,6 @@ export default function Home() {
       } catch {}
     }
   }
-
-  /* =========================================
-     PANTALLA FINAL
-  ========================================= */
 
   if (status === "confirmed") {
     return (
@@ -192,12 +193,10 @@ export default function Home() {
             right: 10%;
             top: 64%;
             transform: translateY(-50%);
-
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-
             text-align: center;
             color: #5d3038;
           }
@@ -208,7 +207,6 @@ export default function Home() {
               Georgia,
               "Times New Roman",
               serif;
-
             font-size: clamp(100px, 29vw, 165px);
             line-height: .82;
             font-weight: 400;
@@ -216,12 +214,7 @@ export default function Home() {
 
           .seats-text {
             margin-top: 18px;
-
-            font-family:
-              Arial,
-              Helvetica,
-              sans-serif;
-
+            font-family: Arial, Helvetica, sans-serif;
             font-size: clamp(14px, 4vw, 19px);
             line-height: 1;
             letter-spacing: .16em;
@@ -240,23 +233,20 @@ export default function Home() {
     );
   }
 
-  /* =========================================
-     PORTADA + VIDEO
-  ========================================= */
-
   if (!introFinished) {
     return (
       <main className="cover-screen">
-        <section className="cover-page">
-
-          {/* PORTADA ORIGINAL DE CANVA */}
+        <section
+          className={`cover-page ${
+            coverLeaving ? "leaving" : ""
+          }`}
+        >
           <img
             src={IMAGES.cover}
             alt=""
             className="cover-image"
           />
 
-          {/* VIDEO */}
           <video
             ref={videoRef}
             className="cover-video"
@@ -269,7 +259,6 @@ export default function Home() {
             webkit-playsinline="true"
           />
 
-          {/* TOQUE SOBRE EL VIDEO */}
           <button
             type="button"
             className="video-touch-zone"
@@ -277,14 +266,13 @@ export default function Home() {
             onClick={startVideoWithSound}
           />
 
-          {/* ZONA INFERIOR PARA ABRIR SAVE THE DATE */}
           <button
             type="button"
             className="cover-touch-zone"
             aria-label="Abrir Save the Date"
-            onClick={() => setIntroFinished(true)}
+            onClick={openInvitation}
+            disabled={coverLeaving}
           />
-
         </section>
 
         <style jsx global>{`
@@ -313,101 +301,76 @@ export default function Home() {
             height: 100svh;
             overflow: hidden;
             background: #ffffff;
+            opacity: 1;
+            transition: opacity 0.5s ease;
           }
 
-          /* PORTADA */
+          .cover-page.leaving {
+            opacity: 0;
+            pointer-events: none;
+          }
 
           .cover-image {
             position: absolute;
             inset: 0;
-
             width: 100%;
             height: 100%;
-
             display: block;
-
             object-fit: cover;
             object-position: center;
-
             z-index: 1;
           }
 
-          /* VIDEO */
-
           .cover-video {
             position: absolute;
-
             left: 11%;
             top: 35%;
-
             width: 78%;
             height: 31%;
-
             display: block;
-
             object-fit: contain;
             object-position: center;
-
             background: transparent;
-
             border: none;
             outline: none;
-
             z-index: 2;
-
             pointer-events: none;
           }
 
-          /* ZONA INVISIBLE PARA ACTIVAR VIDEO + AUDIO */
-
           .video-touch-zone {
             position: absolute;
-
             left: 11%;
             top: 35%;
-
             width: 78%;
             height: 31%;
-
             margin: 0;
             padding: 0;
-
             border: 0;
             outline: none;
-
             background: transparent;
-
             z-index: 4;
-
             cursor: pointer;
-
             -webkit-tap-highlight-color: transparent;
           }
 
-          /* ZONA INFERIOR */
-
           .cover-touch-zone {
             position: absolute;
-
             left: 0;
             right: 0;
             bottom: 0;
-
             height: 28%;
-
             margin: 0;
             padding: 0;
-
             border: 0;
             outline: none;
-
             background: transparent;
-
             z-index: 5;
-
             cursor: pointer;
-
             -webkit-tap-highlight-color: transparent;
+          }
+
+          .cover-touch-zone:disabled {
+            cursor: default;
           }
 
           @media (min-width: 700px) {
@@ -422,15 +385,8 @@ export default function Home() {
     );
   }
 
-  /* =========================================
-     SAVE THE DATE + RSVP
-  ========================================= */
-
   return (
     <main className="invitation">
-
-      {/* SAVE THE DATE */}
-
       <section className="page">
         <img
           src={IMAGES.one}
@@ -439,8 +395,6 @@ export default function Home() {
         />
       </section>
 
-      {/* SEGUNDA IMAGEN */}
-
       <section className="page">
         <img
           src={IMAGES.two}
@@ -448,8 +402,6 @@ export default function Home() {
           className="background-image"
         />
       </section>
-
-      {/* CONFIRMACIÓN */}
 
       <section className="page confirmation-page">
         <img
@@ -517,31 +469,35 @@ export default function Home() {
           margin: 0;
           padding: 0;
           overflow-x: hidden;
+          animation: invitationFadeIn 0.7s ease both;
+        }
+
+        @keyframes invitationFadeIn {
+          from {
+            opacity: 0;
+          }
+
+          to {
+            opacity: 1;
+          }
         }
 
         .page {
           position: relative;
-
           width: 100%;
           aspect-ratio: 9 / 16;
-
           overflow: hidden;
-
           margin: 0;
           padding: 0;
-
           background: #ffffff;
         }
 
         .background-image {
           position: absolute;
           inset: 0;
-
           width: 100%;
           height: 100%;
-
           display: block;
-
           object-fit: cover;
           object-position: center;
         }
@@ -552,13 +508,10 @@ export default function Home() {
 
         .confirmation-form-container {
           position: absolute;
-
           left: 15%;
           right: 15%;
           top: 66%;
-
           transform: translateY(-50%);
-
           display: flex;
           justify-content: center;
           align-items: center;
@@ -567,7 +520,6 @@ export default function Home() {
         .confirmation-form {
           width: 100%;
           max-width: 330px;
-
           display: flex;
           flex-direction: column;
           align-items: center;
@@ -576,25 +528,14 @@ export default function Home() {
         .confirmation-form input {
           width: 100%;
           height: 50px;
-
           padding: 0 16px;
-
           border: 1px solid rgba(80, 45, 45, .35);
           border-radius: 4px;
-
           outline: none;
-
           background: rgba(255, 255, 255, .90);
-
           color: #3f2d2d;
-
-          font-family:
-            Arial,
-            Helvetica,
-            sans-serif;
-
+          font-family: Arial, Helvetica, sans-serif;
           font-size: 15px;
-
           text-align: center;
         }
 
@@ -608,26 +549,16 @@ export default function Home() {
 
         .confirmation-form button {
           margin-top: 14px;
-
           min-width: 160px;
           height: 44px;
-
           padding: 0 26px;
-
           border: none;
           border-radius: 999px;
-
           background: #5d3038;
           color: #ffffff;
-
-          font-family:
-            Arial,
-            Helvetica,
-            sans-serif;
-
+          font-family: Arial, Helvetica, sans-serif;
           font-size: 10px;
           letter-spacing: .14em;
-
           cursor: pointer;
         }
 
@@ -638,27 +569,18 @@ export default function Home() {
 
         .error-message {
           width: 100%;
-
           margin-top: 9px;
           padding: 0 10px;
-
           color: #8a2935;
-
-          font-family:
-            Arial,
-            Helvetica,
-            sans-serif;
-
+          font-family: Arial, Helvetica, sans-serif;
           font-size: 11px;
           line-height: 1.3;
-
           text-align: center;
         }
 
         @media (min-width: 700px) {
           .page {
             width: min(100vw, 540px);
-
             margin-left: auto;
             margin-right: auto;
           }
