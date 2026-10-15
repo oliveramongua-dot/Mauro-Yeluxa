@@ -26,7 +26,6 @@ const GUESTS = [
   { name: "Juan Contreras", seats: 2 },
   { name: "Yovany Contreras", seats: 2 },
   { name: "Laura Batista", seats: 1 },
-  { name: "Daniela Batista", seats: 1 },
   { name: "Gabriela Mongua", seats: 2 },
   { name: "Luz Myriam Aranguren", seats: 1 },
   { name: "Alvaro Guete", seats: 2 },
