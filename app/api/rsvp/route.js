@@ -42,6 +42,7 @@ const GUESTS = [
   { name: "Ronald Rodriguez", seats: 5 },
   { name: "Karen Mongua", seats: 2 },
   { name: "Julian Zuñiga", seats: 1 },
+  { name: "Adolfo Olivera", seats: 1 },
 ];
 
 function normalizeName(value = "") {
