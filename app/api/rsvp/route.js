@@ -13,7 +13,7 @@ const GUESTS = [
   { name: "Stella Mongua", seats: 2 },
   { name: "Elsa Mongua", seats: 2 },
   { name: "Armando Mongua", seats: 1 },
-  { name: "Patricia Torres", seats: 1 },
+  { name: "Patricia Torres", seats: 2 },
   { name: "Carlos Mongua", seats: 1 },
   { name: "Hugo Mongua", seats: 2 },
   { name: "Glinis Castillo", seats: 2 },
